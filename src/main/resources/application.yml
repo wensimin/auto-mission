@@ -1,0 +1,24 @@
+spring:
+  profiles:
+    active: dev
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: true
+        hbm2ddl:
+          auto: update
+    open-in-view: false
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+server:
+  servlet:
+    context-path: /auto-mission
+
+logging:
+  level:
+    root: warn
+    tech.shali: debug
+  file:
+    name: log/log.log

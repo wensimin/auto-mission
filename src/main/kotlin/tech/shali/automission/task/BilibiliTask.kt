@@ -38,9 +38,8 @@ class BilibiliTask(private val taskParamDao: TaskParamDao) {
                 .retrieve().bodyToMono(MangaRes::class.java)
                 .block()
                 .also {
-                    if (it?.code != "0") {
+                    if (it?.code != "0")
                         throw RuntimeException(it?.msg)
-                    }
                     logger.debug("code: ${it.code} msg: ${it.msg}")
                 }
         } catch (e: Exception) {
@@ -50,7 +49,7 @@ class BilibiliTask(private val taskParamDao: TaskParamDao) {
     }
 
     data class MangaRes(
-        val code: String = "",
-        val msg: String = ""
+        val code: String,
+        val msg: String
     )
 }

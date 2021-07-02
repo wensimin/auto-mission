@@ -7,13 +7,20 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.mail.javamail.JavaMailSenderImpl
 import tech.shali.automission.dao.TaskParamDao
 import java.lang.RuntimeException
 import kotlin.random.Random
 
 @Component
-class BilibiliTask(private val taskParamDao: TaskParamDao) {
+class BilibiliTask(
+    private val taskParamDao: TaskParamDao,
+    private val mailSender: JavaMailSender
+) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
+    private val noticeMail = (mailSender as JavaMailSenderImpl).username!!
 
     companion object {
         private const val ACCESS_KEY = "bilibili-manga-accessKey"
@@ -44,7 +51,12 @@ class BilibiliTask(private val taskParamDao: TaskParamDao) {
                 }
         } catch (e: Exception) {
             logger.warn(e.message)
-            //TODO Email
+            mailSender.send(SimpleMailMessage().apply {
+                setFrom(noticeMail)
+                setTo(noticeMail)
+                setSubject("bilibili漫画自动任务失败")
+                setText("错误信息: ${e.message}")
+            })
         }
     }
 

@@ -12,6 +12,16 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  mail:
+    host: smtp.qq.com
+    username: none  # IDE 问题似乎识别不到dev中的配置，在此做占位符配置，被active配置覆盖
+    password: none
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 server:
   servlet:
     context-path: /auto-mission

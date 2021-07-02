@@ -22,9 +22,6 @@ spring:
           auth: true
           starttls:
             enable: true
-server:
-  servlet:
-    context-path: /auto-mission
 
 logging:
   level:

@@ -35,4 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+## 自定义 ##
 log/
+src/main/resources/application-dev.yml

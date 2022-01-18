@@ -34,7 +34,7 @@ class BilibiliMangaTask(
         //睡眠1分钟内随机秒数
         Thread.sleep(randomSec * 1000)
         try {
-            val accessKey = taskParamDao.findByKey(ACCESS_KEY)?.value
+            val accessKey = taskParamDao.findByKey(ACCESS_KEY).value
             val ts = System.currentTimeMillis() / 1000
             WebClient.create()
                 .post()

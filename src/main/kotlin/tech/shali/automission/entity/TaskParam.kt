@@ -1,16 +1,18 @@
 package tech.shali.automission.entity
 
+import org.hibernate.annotations.Type
 import java.util.*
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.Lob
 
 @Entity
 class TaskParam(
     @Id
-    var id: String = UUID.randomUUID().toString(),
-    @Column(nullable = false)
     val key: String,
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     var value: String,
     var remark: String
 )

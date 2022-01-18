@@ -1,21 +1,23 @@
 package tech.shali.automission.task
 
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-import org.springframework.web.reactive.function.client.WebClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.dao.TaskParamDao
-import java.lang.RuntimeException
 import kotlin.random.Random
 
+/**
+ *  b漫自动访问,用来获取每日阅读奖励
+ */
 @Component
-class BilibiliTask(
+class BilibiliMangaTask(
     private val taskParamDao: TaskParamDao,
     private val mailSender: JavaMailSender
 ) {
@@ -27,7 +29,7 @@ class BilibiliTask(
     }
 
     @Scheduled(cron = "0 0 3 * * *")
-    fun manga() {
+    fun run() {
         val randomSec = Random(System.currentTimeMillis()).nextLong(60)
         //睡眠1分钟内随机秒数
         Thread.sleep(randomSec * 1000)

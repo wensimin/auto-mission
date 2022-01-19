@@ -19,7 +19,7 @@ class BilibiliDynamicTask(
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val robotUid: String = taskParamDao.findByKey(idKey).value
-
+    private val webClient = WebClient.create()
     companion object {
         private const val bellaTopic = "bella-dynamic"
         private const val bellaUid = 672353429
@@ -40,12 +40,12 @@ class BilibiliDynamicTask(
     /**
      * bella
      */
-    @Scheduled(initialDelay = 5000, fixedDelay = 5000)
+    @Scheduled(initialDelay = 5000, fixedDelay = 10000)
     fun bellaDynamic() {
         var errorMessage: String? = null
         try {
             val cookie = taskParamDao.findByKey(cookieKey)
-            val cyclicRes = WebClient.create().get().uri(cyclicUrl)
+            val cyclicRes = webClient.get().uri(cyclicUrl)
                 .header("cookie", cookie.value)
                 .retrieve()
                 .bodyToMono(JsonNode::class.java)
@@ -56,7 +56,7 @@ class BilibiliDynamicTask(
             val newNum = cyclicRes?.get("data")?.get("update_num")?.asInt()!!
             if (newNum == 0) return
             logger.info("newNum:$newNum")
-            WebClient.create().get()
+            webClient.get()
                 .uri(String.format(readNewUrl, robotUid))
                 .header("cookie", cookie.value)
                 .retrieve()
@@ -90,7 +90,7 @@ class BilibiliDynamicTask(
                     createTextVo(it)
                 }
                 else -> {
-                    createOtherVo(type)
+                    createOtherVo(type,uId)
                 }
             }
             logger.info("send message $messageVo")
@@ -98,9 +98,9 @@ class BilibiliDynamicTask(
         }
     }
 
-    private fun createOtherVo(typeid: Int): MessageVo {
+    private fun createOtherVo(typeid: Int, uId: Int): MessageVo {
         return MessageVo(
-            title = "uid $bellaUid 发动态了",
+            title = "uid: $uId 发动态了",
             body = "动态为不支持的类型$typeid",
             toTopic = bellaTopic,
             fromClient = clientId

@@ -121,7 +121,8 @@ class BilibiliDynamicTask(
             body = body,
             toTopic = bellaTopic,
             fromClient = clientId,
-            url = "https://t.bilibili.com/$dynamicId"
+            // android only?
+            url = "bilibili://following/detail/$dynamicId"
         )
     }
 

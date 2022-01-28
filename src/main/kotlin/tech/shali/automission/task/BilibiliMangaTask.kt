@@ -30,7 +30,7 @@ class BilibiliMangaTask(
 
     @Scheduled(cron = "0 0 3 * * *")
     fun run() {
-        val randomSec = Random(System.currentTimeMillis()).nextLong(60)
+        val randomSec = Random.nextLong(60)
         //睡眠1分钟内随机秒数
         Thread.sleep(randomSec * 1000)
         try {

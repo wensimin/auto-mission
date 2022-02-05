@@ -1,7 +1,5 @@
 package tech.shali.automission.pojo
 
-import java.io.Serializable
-
 /**
  * message对象
  * mq 中使用该对象json string
@@ -12,5 +10,10 @@ data class MessageVo(
     var toUser: String? = null,
     var toTopic: String? = null,
     var fromClient: String? = null,
-    var url: String? = null
-) : Serializable
+    var url: String? = null,
+    var priority: Priority = Priority.NORMAL
+) {
+    enum class Priority {
+        NORMAL, HIGH
+    }
+}

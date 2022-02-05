@@ -122,7 +122,8 @@ class BilibiliDynamicTask(
             toTopic = bellaTopic,
             fromClient = clientId,
             // android only?
-            url = "bilibili://following/detail/$dynamicId"
+            url = "bilibili://following/detail/$dynamicId",
+            priority = MessageVo.Priority.HIGH
         )
     }
 
@@ -136,7 +137,8 @@ class BilibiliDynamicTask(
             body = body,
             toTopic = bellaTopic,
             fromClient = clientId,
-            url = url.textValue()
+            url = url.textValue(),
+            priority = MessageVo.Priority.HIGH
         )
     }
 

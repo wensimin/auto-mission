@@ -11,6 +11,6 @@ import java.net.URLClassLoader
 class AutoMissionApplication
 
 fun main(args: Array<String>) {
-    URLClassLoader(arrayOf(ClassPathResource("").url)).loadClass("AutoTaskuuid")
+//    URLClassLoader(arrayOf(ClassPathResource("").url)).loadClass("AutoTaskuuid")
     runApplication<AutoMissionApplication>(*args)
 }

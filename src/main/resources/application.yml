@@ -23,9 +23,13 @@ spring:
           starttls:
             enable: true
 
+server:
+  servlet:
+    context-path: /auto-mission
+
 logging:
   level:
-    root: warn
+    root: debug
     tech.shali: debug
   file:
     name: log/log.log

@@ -16,7 +16,7 @@ import kotlin.random.Random
 /**
  *  b漫自动访问,用来获取每日阅读奖励
  */
-@Component
+//@Component
 class BilibiliMangaTask(
     private val taskParamDao: TaskParamDao,
     private val mailSender: JavaMailSender
@@ -28,7 +28,7 @@ class BilibiliMangaTask(
         private const val ACCESS_KEY = "bilibili-manga-accessKey"
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
+//    @Scheduled(cron = "0 0 3 * * *")
     fun run() {
         val randomSec = Random.nextLong(60)
         //睡眠1分钟内随机秒数

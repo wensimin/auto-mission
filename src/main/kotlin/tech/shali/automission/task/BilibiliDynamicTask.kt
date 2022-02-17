@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.dao.TaskParamDao
 import tech.shali.automission.pojo.MessageVo
 
-@Component
+//@Component
 class BilibiliDynamicTask(
     private val taskParamDao: TaskParamDao,
     private val objectMapper: ObjectMapper,
@@ -40,7 +40,7 @@ class BilibiliDynamicTask(
     /**
      * bella
      */
-    @Scheduled(initialDelay = 5000, fixedDelay = 10000)
+//    @Scheduled(initialDelay = 5000, fixedDelay = 10000)
     fun bellaDynamic() {
         var errorMessage: String? = null
         try {

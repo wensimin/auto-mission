@@ -29,7 +29,9 @@ server:
 
 logging:
   level:
-    root: debug
+    root: warn
     tech.shali: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: warn
   file:
     name: log/log.log

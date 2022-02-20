@@ -32,19 +32,13 @@ class ResourceServerConfig {
     @Bean
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val jwtAuthenticationConverter = JwtAuthenticationConverter()
-        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(JwtAuthConverter())
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter {
+            // scope & auth 本项目 混用
+            val scope = it.getClaim<Collection<String>?>("scope")
+            val auth = it.getClaim<Collection<String>?>("auth")
+            ((scope ?: emptyList()) + (auth ?: emptyList())).map { s -> SimpleGrantedAuthority(s) }
+        }
         return jwtAuthenticationConverter
     }
 
-    /**
-     * 转换jwt的权限
-     */
-    class JwtAuthConverter : Converter<Jwt, Collection<GrantedAuthority>> {
-        override fun convert(source: Jwt): Collection<GrantedAuthority> {
-            // scope & auth 本项目 混用
-            val scope = source.getClaim<Collection<String>?>("scope")
-            val auth = source.getClaim<Collection<String>?>("auth")
-            return ((scope ?: emptyList()) + (auth ?: emptyList())).map { s -> SimpleGrantedAuthority(s) }
-        }
-    }
 }

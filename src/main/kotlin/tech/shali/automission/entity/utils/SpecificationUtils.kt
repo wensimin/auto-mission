@@ -11,9 +11,14 @@ import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.kotlinProperty
 
 /**
- * 标记性质接口表示其中的字段均用于查询
+ * 查询参数接口,实现了一组依赖注解的查询规范
+ * 未进行标记的成员会生成 eq 查询规范
+ * 空值成员会进行跳过
  */
 interface QueryParam {
+    /**
+     * 通过当前类的成员以及注解生成查询参数
+     */
     fun <T> toSpecification(): Specification<T> {
         val fields = this.javaClass.declaredFields
         return Specification { root, query, criteriaBuilder ->
@@ -49,12 +54,16 @@ interface QueryParam {
         }
     }
 
+    /**
+     * 生成大于目标规范
+     */
     private fun <T> greaterSpecification(
         greater: Greater,
         root: Root<T>,
         criteriaBuilder: CriteriaBuilder,
         value: Any
     ): Predicate {
+        @Suppress("UNCHECKED_CAST")
         value as Comparable<Any>
         return when (greater.eq) {
             true -> criteriaBuilder.greaterThanOrEqualTo(root.get(greater.fieldName), value)
@@ -62,12 +71,16 @@ interface QueryParam {
         }
     }
 
+    /**
+     * 生成小于目标查询规范
+     */
     private fun <T> lessSpecification(
         less: Less,
         root: Root<T>,
         criteriaBuilder: CriteriaBuilder,
         value: Any
     ): Predicate {
+        @Suppress("UNCHECKED_CAST")
         value as Comparable<Any>
         return when (less.eq) {
             true -> criteriaBuilder.lessThanOrEqualTo(root.get(less.fieldName), value)
@@ -145,16 +158,20 @@ annotation class Like(val type: Type = Type.START, val fieldName: String = "") {
 
 /**
  * 指目标值应该小于标注的属性值
+ * @param fieldName 必须,对应的查询目标field
+ * 本注解只应该使用在实现了 [java.lang.Comparable] 接口的对象上
  */
 @kotlin.annotation.Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
-annotation class Less(val fieldName: String = "", val eq: Boolean = true)
+annotation class Less(val fieldName: String, val eq: Boolean = true)
 
 /**
  * 指目标值应该大于标注的属性值
+ *  @param fieldName 必须,对应的查询目标field
+ * 本注解只应该使用在实现了 [java.lang.Comparable] 接口的对象上
  */
 @kotlin.annotation.Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
-annotation class Greater(val fieldName: String = "", val eq: Boolean = true)
+annotation class Greater(val fieldName: String, val eq: Boolean = true)

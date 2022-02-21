@@ -32,6 +32,6 @@ logging:
     root: warn
     tech.shali: debug
     org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
   file:
     name: log/log.log

@@ -14,11 +14,11 @@ import javax.persistence.MappedSuperclass
 @EntityListeners(DataEntityListener::class)
 open class Data(
     @Id @Column(nullable = false) @JsonProperty(access = READ_ONLY) open var id: String = UUID.randomUUID().toString(),
-    @Column(nullable = false, updatable = false) @JsonProperty(access = READ_ONLY) var createDate: Instant = Instant.now(),
-    @Column(nullable = false) @JsonProperty(access = READ_ONLY) var updateDate: Instant = Instant.now()
+    @Column(nullable = false, updatable = false) @JsonProperty(access = READ_ONLY) var createDate: Date = Date(),
+    @Column(nullable = false) @JsonProperty(access = READ_ONLY) var updateDate: Date = Date()
 ) {
 
     fun beforeUpdate() {
-        updateDate = Instant.now()
+        updateDate = Date()
     }
 }

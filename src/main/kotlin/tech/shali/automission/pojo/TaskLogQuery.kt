@@ -1,7 +1,7 @@
 package tech.shali.automission.pojo
 
 import tech.shali.automission.entity.utils.*
-import java.time.Instant
+import java.util.*
 
 data class TaskLogQuery(
     val label: String? = null,
@@ -9,9 +9,9 @@ data class TaskLogQuery(
     val text: String? = null,
     val taskId: String? = null,
     @Greater("createDate")
-    val startDate: Instant? = null,
+    val startDate: Date? = null,
     @Less("createDate")
-    val endDate: Instant? = null,
+    val endDate: Date? = null,
     @Ignore
     val page: PageVo = PageVo()
 ) : QueryParam

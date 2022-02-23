@@ -31,7 +31,7 @@ class GlobalErrorHandler(private val logger: Logger) {
 
     private fun cutStackTrace(stackTrace: String): String {
         //切2行log
-        return stackTrace.split("\r\n\t").subList(0, 2).joinToString(" ")
+        return stackTrace.split("\r\n\t").subList(0, 2).joinToString("\r\n\t")
     }
 }
 

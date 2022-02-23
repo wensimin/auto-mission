@@ -9,14 +9,19 @@ import org.springframework.data.domain.Sort
 data class PageVo(
     var number: Int = 0,
     var size: Int = 20,
-    var direction: Sort.Direction = Sort.Direction.ASC,
-    var properties: Set<String> = emptySet()
+    var direction: List<String> = listOf()
 ) {
     fun toPageRequest(): PageRequest {
-        return if (properties.isEmpty()) {
+        return if (direction.isEmpty()) {
             PageRequest.of(number, size)
         } else {
-            PageRequest.of(number, size, direction, *properties.toTypedArray())
+            val orders = direction.map {
+                it.split(" ").let { sort ->
+                    //  first为属性名,  last为排序方式
+                    Sort.Order(Sort.Direction.valueOf(sort.last().uppercase()), sort.first())
+                }
+            }
+            PageRequest.of(number, size, Sort.by(orders))
         }
     }
 }

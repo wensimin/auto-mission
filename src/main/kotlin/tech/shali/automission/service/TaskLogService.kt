@@ -13,4 +13,8 @@ class TaskLogService(private val taskLogDao: TaskLogDao) {
         return taskLogDao.findAll(taskLogQuery.toSpecification<TaskLog>(), taskLogQuery.page.toPageRequest())
     }
 
+    fun log(log: TaskLog) {
+        this.taskLogDao.save(log)
+    }
+
 }

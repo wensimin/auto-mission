@@ -7,17 +7,23 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
+import tech.shali.automission.entity.TaskLog
+import tech.shali.automission.service.TaskLogService
 
 
 @ControllerAdvice
 @ResponseBody
-class GlobalErrorHandler(private val logger: Logger) {
+class GlobalErrorHandler(
+    private val logger: Logger,
+    private val taskLogService: TaskLogService
+) {
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse {
         //按未知错误处理
         logger.warn(cutStackTrace(e.stackTraceToString()))
+        taskLogService.log(TaskLog("WARN", e.stackTraceToString().substring(0,250)))
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
 

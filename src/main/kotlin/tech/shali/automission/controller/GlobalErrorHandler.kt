@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import tech.shali.automission.entity.TaskLog
 import tech.shali.automission.service.TaskLogService
+import java.lang.RuntimeException
 
 
 @ControllerAdvice
@@ -35,13 +36,22 @@ class GlobalErrorHandler(
         return ErrorResponse(ErrorType.PARAM, message)
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(value = [NotFoundException::class])
+    fun exception(e: NotFoundException): ErrorResponse {
+        return ErrorResponse(ErrorType.NOT_FOUND, e.message)
+    }
+
     private fun cutStackTrace(stackTrace: String): String {
         //切2行log
         return stackTrace.split("\r\n\t").subList(0, 2).joinToString("\r\n\t")
     }
 }
 
-class ErrorResponse(val error: ErrorType, val message: String)
+class ErrorResponse(val error: ErrorType, val message: String?)
+
 enum class ErrorType {
-    ERROR, PARAM
+    ERROR, PARAM, NOT_FOUND
 }
+
+class NotFoundException : RuntimeException()

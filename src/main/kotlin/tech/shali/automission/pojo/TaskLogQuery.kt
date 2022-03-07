@@ -4,6 +4,7 @@ import tech.shali.automission.entity.utils.*
 import java.util.*
 
 data class TaskLogQuery(
+    @Eq(igCase = true)
     val label: String? = null,
     @Like(Like.Type.ALL)
     val text: String? = null,

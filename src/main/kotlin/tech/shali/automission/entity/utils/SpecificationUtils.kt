@@ -99,7 +99,11 @@ interface QueryParam {
         eq: Eq? = null
     ): Predicate {
         val filedName = if (ObjectUtils.isEmpty(eq?.fieldName)) field.name else eq?.fieldName
-        return criteriaBuilder.equal(root.get<Any>(filedName), value)
+        return if (eq?.igCase == true && value is String) {
+            criteriaBuilder.equal(criteriaBuilder.upper(root.get(filedName)), value.uppercase())
+        } else {
+            criteriaBuilder.equal(root.get<Any>(filedName), value)
+        }
     }
 
 
@@ -139,7 +143,7 @@ annotation class Ignore
 @kotlin.annotation.Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
-annotation class Eq(val fieldName: String = "")
+annotation class Eq(val fieldName: String = "", val igCase: Boolean = false)
 
 
 /**

@@ -4,6 +4,9 @@ import org.hibernate.validator.constraints.Length
 import java.util.*
 import javax.validation.constraints.NotEmpty
 
+/**
+ * Task 参数类
+ */
 data class TaskSave(
     var id: String = UUID.randomUUID().toString(),
     @field:NotEmpty
@@ -13,7 +16,7 @@ data class TaskSave(
     var description: String?,
     @field:NotEmpty
     var code: String?,
-    @field:NotEmpty
-    var cronExpression: String?,
-    var enabled: Boolean = false
+    var cronExpression: String? = null,
+    var interval: Long? = null,
+    var async: Boolean = false
 )

@@ -7,9 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.ResponseStatus
-import tech.shali.automission.entity.TaskLog
 import tech.shali.automission.service.TaskLogService
-import java.lang.RuntimeException
 
 
 @ControllerAdvice
@@ -23,8 +21,8 @@ class GlobalErrorHandler(
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse {
         //按未知错误处理
-        logger.warn(cutStackTrace(e.stackTraceToString()))
-        taskLogService.log(TaskLog("WARN", e.stackTraceToString().substring(0,250)))
+        logger.error(cutStackTrace(e.stackTraceToString()))
+        taskLogService.getLogger("global error").error(e.stackTraceToString())
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
 

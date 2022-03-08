@@ -1,0 +1,18 @@
+import tech.shali.automission.service.TaskLogger
+import tech.shali.automission.service.MessageService
+import tech.shali.automission.pojo.MessageVo
+import com.fasterxml.jackson.databind.*
+import org.springframework.web.reactive.function.client.WebClient
+
+
+val logger = bindings["logger"] as TaskLogger
+val messageService = bindings["messageService"] as MessageService
+val objectMapper = bindings["objectMapper"] as ObjectMapper
+val webClient = bindings["webClient"] as WebClient
+
+webClient.get().uri("https://shali.fun:3000/authorization/.well-known/openid-configuration")
+    .retrieve()
+    .bodyToMono(JsonNode::class.java)
+    .block().run{
+        logger.debug(this?.get("issuer").toString())
+   }

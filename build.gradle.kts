@@ -31,6 +31,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // jsr223
+    runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223")
 }
 
 tasks.withType<KotlinCompile> {
@@ -38,6 +40,11 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "14"
     }
+}
+
+java {
+    withSourcesJar()
+    // and/or analogously use “withJavadocJar()” to get a “javadocJar” task
 }
 
 tasks.withType<Test> {

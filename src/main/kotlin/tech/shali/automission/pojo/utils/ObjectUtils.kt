@@ -1,4 +1,4 @@
-package tech.shali.automission.pojo
+package tech.shali.automission.pojo.utils
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter

@@ -17,16 +17,14 @@ class Task(
     var name: String,
     @Column(nullable = false)
     @Length(max = 255)
-    @NotEmpty
     var description: String,
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     @Column(nullable = false)
-    @NotEmpty
     var code: String,
-    @Column(nullable = false)
-    @NotEmpty
-    var cronExpression: String,
+    var cronExpression: String? = null,
+    var interval: Long? = null,
+    var async: Boolean = false,
     @Column(nullable = false)
     var enabled: Boolean = false
 ) : Data()

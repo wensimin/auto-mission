@@ -17,14 +17,14 @@ class TaskLogService(private val taskLogDao: TaskLogDao) {
         this.taskLogDao.save(log)
     }
 
-    fun getLogger(taskId: String): TaskLogger {
+    fun getLogger(taskId: String? = null): TaskLogger {
         return JdbcTaskLogger(this, taskId)
     }
 
     /**
      * 绑定task id 的logger
      */
-    class JdbcTaskLogger(private val taskLogService: TaskLogService, private val id: String) : TaskLogger {
+    class JdbcTaskLogger(private val taskLogService: TaskLogService, private val id: String?) : TaskLogger {
 
         override fun log(label: TaskLogger.Label, message: String, taskId: String?) {
             taskLogService.log(TaskLog(label.name, message, taskId ?: id))

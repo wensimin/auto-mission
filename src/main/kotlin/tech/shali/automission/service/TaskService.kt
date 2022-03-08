@@ -1,6 +1,8 @@
 package tech.shali.automission.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Page
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronExpression
@@ -34,16 +36,24 @@ class TaskService(
      * 正在运行的任务列表
      */
     private val runningTaskMap = mutableMapOf<String, ScheduledFuture<*>>()
-
+    private val logger = taskLogService.getLogger()
     fun find(taskQuery: TaskQuery): Page<Task> {
         return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
     }
 
-    fun save(task: TaskSave) {
-        taskDao.save(task.toClass(Task::class))
+    /**
+     * 保存任务后会自动暂停
+     */
+    fun save(save: TaskSave) {
+        val task = save.toClass(Task::class)
+        taskDao.save(task)
+        stopTask(task)
     }
 
-    @Transactional
+    /**
+     * 切换状态,任何异常回滚
+     */
+    @Transactional(rollbackFor = [Exception::class])
     fun switchTask(id: String, enabled: Boolean) {
         val task = taskDao.findById(id).orElseThrow()
         task.enabled = enabled
@@ -69,17 +79,48 @@ class TaskService(
     }
 
     /**
+     * 启动时会reload task
+     */
+    @EventListener(ContextRefreshedEvent::class)
+    fun reloadTask() {
+        // 先停止所有任务
+        runningTaskMap.entries.forEach {
+            it.value.cancel(false)
+        }
+        runningTaskMap.clear()
+        logger.info("开始初始化所有task")
+        this.taskDao.findByEnabled(true).forEach {
+            try {
+                startTask(it)
+            } catch (e: Exception) {
+                logger.warn("${it.id} 启动失败,已经设为停止状态")
+                it.enabled = false
+                taskDao.save(it)
+            }
+        }
+        logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
+
+    }
+
+    /**
      * 停止运行任务并且从map种删除
      */
     private fun stopTask(task: Task) {
-        this.runningTaskMap[task.id]?.cancel(false)
-        this.runningTaskMap.remove(task.id)
+        this.runningTaskMap[task.id]?.let {
+            it.cancel(false)
+            this.runningTaskMap.remove(task.id)
+            logger.info("${task.id} 任务已停止,当前运行任务数量${runningTaskMap.size}")
+        }
     }
 
     /**
      * 运行任务
      */
     private fun startTask(task: Task) {
+        //不重复创建task
+        if (this.runningTaskMap.containsKey(task.id)) {
+            return
+        }
         // 建立task runnable ,用task id 建立logger
         val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task.id))
         val runningTask = when {
@@ -101,6 +142,7 @@ class TaskService(
         }
         // 存储正在运行的任务map
         runningTaskMap[task.id] = runningTask!!
+        logger.info("${task.id} 任务启动成功,当前运行任务数量${runningTaskMap.size}")
     }
 
     /**

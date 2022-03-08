@@ -14,15 +14,15 @@ import tech.shali.automission.service.TaskLogService
 @ResponseBody
 class GlobalErrorHandler(
     private val logger: Logger,
-    private val taskLogService: TaskLogService
+    taskLogService: TaskLogService
 ) {
-
+    private val taskLogger = taskLogService.getLogger();
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse {
         //按未知错误处理
         logger.error(cutStackTrace(e.stackTraceToString()))
-        taskLogService.getLogger("global error").error(e.stackTraceToString())
+        taskLogger.error(e.stackTraceToString())
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
 

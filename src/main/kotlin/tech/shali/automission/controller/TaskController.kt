@@ -1,5 +1,6 @@
 package tech.shali.automission.controller
 
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.domain.Page
 import org.springframework.web.bind.annotation.*
 import tech.shali.automission.entity.Task
@@ -38,5 +39,10 @@ class TaskController(
     @PostMapping("testCode")
     fun testCode(@RequestBody @Valid code: DebugCodeVo): String {
         return taskService.testCode(code)
+    }
+
+    @GetMapping("template")
+    fun getTemplate(): String {
+        return ClassPathResource("CodeTemplate").file.readText()
     }
 }

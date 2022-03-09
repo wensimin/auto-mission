@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Page
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronExpression
 import org.springframework.scheduling.support.CronTrigger
@@ -189,6 +190,15 @@ class TaskService(
         put("messageService", messageService)
         put("objectMapper", objectMapper)
         put("webClient", WebClient.create())
+    }
+
+    /**
+     * 删除任务
+     */
+    fun deleteTask(id: UUID) {
+        val task = taskDao.findByIdOrNull(id) ?: return
+        stopTask(task)
+        this.taskDao.delete(task)
     }
 
 }

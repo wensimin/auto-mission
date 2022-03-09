@@ -31,6 +31,10 @@ class TaskController(
     fun post(@RequestBody @Valid task: TaskSave) {
         taskService.save(task)
     }
+    @DeleteMapping("{id}")
+    fun delete(@PathVariable id: UUID){
+        taskService.deleteTask(id)
+    }
 
     @PutMapping("{id}")
     fun put(@PathVariable id: UUID, enabled: Boolean) {

@@ -9,6 +9,7 @@ class DebugTaskLogger : TaskLogger {
 
     override fun log(label: TaskLogger.Label, message: String, taskId: String?) {
         consoleText.append("$label : $message id:$taskId")
+        consoleText.append("\n")
     }
 
     fun view(): String {

@@ -48,8 +48,22 @@ class TaskService(
      */
     fun save(save: TaskSave) {
         val task = save.toClass(Task::class)
+        validTask(task)
         taskDao.save(task)
         stopTask(task)
+    }
+
+    /**
+     * 检查参数
+     */
+    private fun validTask(task: Task) {
+        if (task.cronExpression?.isNotEmpty() == true && !CronExpression.isValidExpression(task.cronExpression)) {
+            throw RuntimeException("cron 表达式后端不支持")
+        }
+        if (task.interval == null && task.cronExpression == null) {
+            throw RuntimeException("没有可执行方式")
+        }
+
     }
 
     /**

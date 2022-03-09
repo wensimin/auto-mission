@@ -2,15 +2,14 @@ package tech.shali.automission.entity
 
 import org.hibernate.annotations.Type
 import org.hibernate.validator.constraints.Length
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Lob
+import java.util.*
+import javax.persistence.*
 
 @Entity
 class Task(
-    @Id @Column(nullable = false)
-    var id: String,
+    @Id
+    @GeneratedValue
+    var id: UUID? = null,
     @Column(nullable = false)
     var name: String,
     @Column(nullable = false)

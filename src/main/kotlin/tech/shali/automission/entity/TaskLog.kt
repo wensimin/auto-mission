@@ -2,10 +2,7 @@ package tech.shali.automission.entity
 
 import org.hibernate.annotations.Type
 import java.util.*
-import javax.persistence.Column
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.Lob
+import javax.persistence.*
 
 @Entity
 class TaskLog(
@@ -16,6 +13,7 @@ class TaskLog(
     @Column(nullable = false)
     val text: String,
     val taskId: String? = null,
-    @Id @Column(nullable = false)
-    var id: String = UUID.randomUUID().toString()
+    @Id
+    @GeneratedValue
+    var id: UUID? = null
 ) : Data()

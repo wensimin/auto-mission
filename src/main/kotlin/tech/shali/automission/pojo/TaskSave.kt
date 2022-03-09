@@ -8,7 +8,7 @@ import javax.validation.constraints.NotEmpty
  * Task 参数类
  */
 data class TaskSave(
-    var id: String = UUID.randomUUID().toString(),
+    var id: UUID? = null,
     @field:NotEmpty
     var name: String?,
     @Length(max = 255)

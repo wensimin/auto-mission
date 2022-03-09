@@ -8,6 +8,7 @@ import tech.shali.automission.pojo.DebugCodeVo
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.service.TaskService
+import java.util.*
 import javax.validation.Valid
 
 @RestController
@@ -22,7 +23,7 @@ class TaskController(
     }
 
     @GetMapping("{id}")
-    fun getOne(@PathVariable id: String): Task {
+    fun getOne(@PathVariable id: UUID): Task {
         return taskService.findOne(id)
     }
 
@@ -32,7 +33,7 @@ class TaskController(
     }
 
     @PutMapping("{id}")
-    fun put(@PathVariable id: String, enabled: Boolean) {
+    fun put(@PathVariable id: UUID, enabled: Boolean) {
         taskService.switchTask(id, enabled)
     }
 

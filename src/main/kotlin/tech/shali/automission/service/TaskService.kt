@@ -17,6 +17,7 @@ import tech.shali.automission.pojo.DebugCodeVo
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.pojo.utils.toClass
+import java.util.*
 import java.util.concurrent.ScheduledFuture
 import javax.script.Bindings
 import javax.script.Compilable
@@ -35,7 +36,7 @@ class TaskService(
     /**
      * 正在运行的任务列表
      */
-    private val runningTaskMap = mutableMapOf<String, ScheduledFuture<*>>()
+    private val runningTaskMap = mutableMapOf<UUID, ScheduledFuture<*>>()
     private val logger = taskLogService.getLogger()
     fun find(taskQuery: TaskQuery): Page<Task> {
         return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
@@ -54,14 +55,14 @@ class TaskService(
      * 切换状态,任何异常回滚
      */
     @Transactional(rollbackFor = [Exception::class])
-    fun switchTask(id: String, enabled: Boolean) {
+    fun switchTask(id: UUID, enabled: Boolean) {
         val task = taskDao.findById(id).orElseThrow()
         task.enabled = enabled
         taskDao.save(task)
         this.switchTask(task)
     }
 
-    fun findOne(id: String): Task {
+    fun findOne(id: UUID): Task {
         return taskDao.findById(id).orElseThrow {
             throw NotFoundException()
         }
@@ -122,7 +123,7 @@ class TaskService(
             return
         }
         // 建立task runnable ,用task id 建立logger
-        val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task.id))
+        val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task.id.toString()))
         val runningTask = when {
             //首先检查cron是否有效
             CronExpression.isValidExpression(task.cronExpression) -> {
@@ -141,7 +142,7 @@ class TaskService(
             }
         }
         // 存储正在运行的任务map
-        runningTaskMap[task.id] = runningTask!!
+        runningTaskMap[task.id!!] = runningTask!!
         logger.info("${task.id} 任务启动成功,当前运行任务数量${runningTaskMap.size}")
     }
 

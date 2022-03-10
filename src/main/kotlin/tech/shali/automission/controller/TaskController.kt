@@ -8,6 +8,7 @@ import tech.shali.automission.pojo.DebugCodeVo
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.service.TaskService
+import java.io.File
 import java.util.*
 import javax.validation.Valid
 
@@ -48,6 +49,6 @@ class TaskController(
 
     @GetMapping("template")
     fun getTemplate(): String {
-        return ClassPathResource("CodeTemplate").file.readText()
+        return ClassPathResource("CodeTemplate").inputStream.bufferedReader().use { it.readText() }
     }
 }

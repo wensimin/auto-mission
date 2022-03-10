@@ -16,12 +16,12 @@ class GlobalErrorHandler(
     private val logger: Logger,
     taskLogService: TaskLogService
 ) {
-    private val taskLogger = taskLogService.getLogger();
+    private val taskLogger = taskLogService.getLogger()
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse {
         //按未知错误处理
-        logger.error(cutStackTrace(e.stackTraceToString()))
+        logger.error(e.stackTraceToString())
         taskLogger.error(e.stackTraceToString())
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
@@ -40,10 +40,6 @@ class GlobalErrorHandler(
         return ErrorResponse(ErrorType.NOT_FOUND, e.message)
     }
 
-    private fun cutStackTrace(stackTrace: String): String {
-        //切2行log
-        return stackTrace.split("\r\n\t").subList(0, 2).joinToString("\r\n\t")
-    }
 }
 
 class ErrorResponse(val error: ErrorType, val message: String?)

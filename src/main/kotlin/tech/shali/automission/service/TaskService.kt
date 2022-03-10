@@ -195,6 +195,7 @@ class TaskService(
         } catch (e: Exception) {
             logger.error(e.stackTraceToString())
         }
+        logger.debug("运行完成")
         return logger.view()
     }
 

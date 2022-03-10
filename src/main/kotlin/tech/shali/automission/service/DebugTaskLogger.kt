@@ -8,7 +8,7 @@ class DebugTaskLogger : TaskLogger {
     private val consoleText: StringBuilder = StringBuilder()
 
     override fun log(label: TaskLogger.Label, message: String, taskId: String?) {
-        consoleText.append("$label : $message id:$taskId")
+        consoleText.append("$label : $message")
         consoleText.append("\n")
     }
 

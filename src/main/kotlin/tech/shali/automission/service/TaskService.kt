@@ -32,7 +32,9 @@ class TaskService(
     private val objectMapper: ObjectMapper,
     private val taskLogService: TaskLogService,
     // 任务调度器
-    private val taskScheduler: TaskScheduler
+    private val taskScheduler: TaskScheduler,
+    // 简单的kv store
+    private val jdbcKVStore: JdbcKVStore
 ) {
     /**
      * 正在运行的任务列表
@@ -204,6 +206,7 @@ class TaskService(
         put("messageService", messageService)
         put("objectMapper", objectMapper)
         put("webClient", WebClient.create())
+        put("store", jdbcKVStore)
     }
 
     /**

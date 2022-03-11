@@ -25,6 +25,10 @@ spring:
   mvc:
     format:
       date: yyyy-MM-dd HH:mm:ss
+  task:
+    scheduling:
+      pool:
+        size: 10
 
 server:
   servlet:

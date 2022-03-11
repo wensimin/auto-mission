@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.*
 import org.springframework.web.reactive.function.client.WebClient
 import com.fasterxml.jackson.module.kotlin.*
 import org.springframework.http.*
+import org.springframework.web.client.RestTemplate
 
 // 常用注入对象
 // 用法参见 https://github.com/wensimin/auto-mission/blob/master/README.md
@@ -12,6 +13,7 @@ val logger = bindings["logger"] as TaskLogger
 val messageService = bindings["messageService"] as MessageService
 val objectMapper = bindings["objectMapper"] as ObjectMapper
 val webClient = bindings["webClient"] as WebClient
+val restTemplate = bindings["restTemplate"] as RestTemplate
 val store  =  bindings["store"] as KVStore
 
 //以下自定义代码

@@ -10,6 +10,7 @@ import org.springframework.scheduling.support.CronExpression
 import org.springframework.scheduling.support.CronTrigger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.controller.NotFoundException
 import tech.shali.automission.dao.TaskDao
@@ -170,12 +171,15 @@ class TaskService(
         val engine = ScriptEngineManager().getEngineByExtension("kts")
         engine as Compilable
         val compiled = engine.compile(code)
+        // api对象持续整个任务周期
+        val webClient = WebClient.create()
+        val restTemplate = RestTemplate()
         //编译异常进行抛出
         return Runnable {
             try {
                 compiled.eval(engine.createBindings().apply {
                     put("logger", logger)
-                    putBindings()
+                    putBindings(webClient, restTemplate)
                 })
                 //运行时的错误进行catch&log
             } catch (e: Exception) {
@@ -203,10 +207,14 @@ class TaskService(
     /**
      * 基本的依赖项注入
      */
-    private fun Bindings.putBindings() {
+    private fun Bindings.putBindings(
+        webClient: WebClient = WebClient.create(),
+        restTemplate: RestTemplate = RestTemplate()
+    ) {
         put("messageService", messageService)
         put("objectMapper", objectMapper)
-        put("webClient", WebClient.create())
+        put("webClient", webClient)
+        put("restTemplate", restTemplate)
         put("store", jdbcKVStore)
     }
 

@@ -126,7 +126,7 @@ class TaskService(
      */
     private fun stopTask(task: Task) {
         this.runningTaskMap[task.id]?.let {
-            it.cancel(false)
+            it.cancel(true)
             this.runningTaskMap.remove(task.id)
             logger.info("${task.id} 任务已停止,当前运行任务数量${runningTaskMap.size}")
         }

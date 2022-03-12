@@ -43,3 +43,17 @@ jackson的objectMapper
 # webClient
 spring boot 自带webClient  
 `val webClient = bindings["webClient"] as WebClient`  
+示例
+````
+    val formData = LinkedMultiValueMap<String,String>().apply {
+        add("")
+    }
+    webClient.post().uri("")
+        .header("cookie", cookie)
+        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+        .body(BodyInserters.fromFormData(formData))
+        .retrieve()
+        .bodyToMono(JsonNode::class.java)
+        .block()
+
+````

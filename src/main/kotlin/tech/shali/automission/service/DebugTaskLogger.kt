@@ -5,7 +5,7 @@ package tech.shali.automission.service
  */
 class DebugTaskLogger : TaskLogger {
 
-    private val consoleText: StringBuilder = StringBuilder()
+    private val consoleText = StringBuilder()
 
     override fun log(level: TaskLogger.Level, message: String, taskId: String?) {
         consoleText.append("$level : $message")

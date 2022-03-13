@@ -15,7 +15,6 @@ import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.controller.NotFoundException
 import tech.shali.automission.dao.TaskDao
 import tech.shali.automission.entity.Task
-import tech.shali.automission.pojo.DebugCodeVo
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.pojo.utils.toClass
@@ -167,14 +166,14 @@ class TaskService(
     /**
      * 构建task Runnable
      */
-    private fun getTaskRunnable(code: String, logger: TaskLogger): Runnable {
+    fun getTaskRunnable(code: String, logger: TaskLogger): Runnable {
         val engine = ScriptEngineManager().getEngineByExtension("kts")
         engine as Compilable
+        // 编译异常进行抛出
         val compiled = engine.compile(code)
         // api对象持续整个任务周期
         val webClient = WebClient.create()
         val restTemplate = RestTemplate()
-        //编译异常进行抛出
         return Runnable {
             try {
                 compiled.eval(engine.createBindings().apply {
@@ -186,21 +185,6 @@ class TaskService(
                 logger.error(e.stackTraceToString())
             }
         }
-    }
-
-    /**
-     * 测试运行一次代码
-     */
-    fun testCode(code: DebugCodeVo): String {
-        //代码试运行时的logger
-        val logger = DebugTaskLogger()
-        try {
-            getTaskRunnable(code.code!!, logger).run()
-        } catch (e: Exception) {
-            logger.error(e.stackTraceToString())
-        }
-        logger.debug("运行完成")
-        return logger.view()
     }
 
 
@@ -226,5 +210,7 @@ class TaskService(
         stopTask(task)
         this.taskDao.delete(task)
     }
+
+
 
 }

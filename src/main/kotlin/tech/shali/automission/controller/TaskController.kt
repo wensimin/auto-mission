@@ -42,10 +42,6 @@ class TaskController(
         taskService.switchTask(id, enabled)
     }
 
-    @PostMapping("testCode")
-    fun testCode(@RequestBody @Valid code: DebugCodeVo): String {
-        return taskService.testCode(code)
-    }
 
     @GetMapping("template")
     fun getTemplate(): String {

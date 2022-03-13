@@ -26,7 +26,7 @@ class GlobalErrorHandler(
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [MethodArgumentNotValidException::class])
     fun exception(e: MethodArgumentNotValidException): ErrorResponse {
         val fieldError = e.bindingResult.fieldError

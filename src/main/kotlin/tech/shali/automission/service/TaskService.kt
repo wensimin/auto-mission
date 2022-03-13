@@ -19,6 +19,7 @@ import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.pojo.utils.toClass
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
 import javax.script.Bindings
 import javax.script.Compilable
@@ -39,7 +40,7 @@ class TaskService(
     /**
      * 正在运行的任务列表
      */
-    private val runningTaskMap = mutableMapOf<UUID, ScheduledFuture<*>>()
+    private val runningTaskMap = ConcurrentHashMap<UUID, ScheduledFuture<*>>()
     private val logger = taskLogService.getLogger()
     fun find(taskQuery: TaskQuery): Page<Task> {
         return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
@@ -103,7 +104,7 @@ class TaskService(
     fun reloadTask() {
         // 先停止所有任务
         runningTaskMap.entries.forEach {
-            it.value.cancel(false)
+            it.value.cancel(true)
         }
         runningTaskMap.clear()
         logger.info("开始初始化所有task")

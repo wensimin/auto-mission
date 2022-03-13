@@ -40,12 +40,19 @@ class GlobalErrorHandler(
         return ErrorResponse(ErrorType.NOT_FOUND, e.message)
     }
 
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(value = [ServiceException::class])
+    fun exception(e: ServiceException): ErrorResponse {
+        return ErrorResponse(e.error, e.message)
+    }
+
 }
 
 class ErrorResponse(val error: ErrorType, val message: String?)
 
 enum class ErrorType {
-    ERROR, PARAM, NOT_FOUND
+    ERROR, PARAM, NOT_FOUND, DEBUG_LIMIT
 }
 
 class NotFoundException : RuntimeException()
+class ServiceException(val error: ErrorType, message: String? = null) : RuntimeException(message)

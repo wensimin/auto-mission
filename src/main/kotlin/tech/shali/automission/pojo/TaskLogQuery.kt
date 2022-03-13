@@ -1,11 +1,12 @@
 package tech.shali.automission.pojo
 
 import tech.shali.automission.entity.utils.*
+import tech.shali.automission.service.TaskLogger
 import java.util.*
 
 data class TaskLogQuery(
-    @Eq(igCase = true)
-    val label: String? = null,
+    @Less("level")
+    val level: TaskLogger.Level? = null,
     @Like(Like.Type.ALL)
     val text: String? = null,
     val taskId: String? = null,

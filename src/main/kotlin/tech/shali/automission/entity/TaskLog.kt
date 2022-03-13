@@ -1,13 +1,15 @@
 package tech.shali.automission.entity
 
 import org.hibernate.annotations.Type
+import tech.shali.automission.service.TaskLogger
 import java.util.*
 import javax.persistence.*
 
 @Entity
 class TaskLog(
     @Column(nullable = false)
-    val label: String,
+    @Enumerated
+    val level: TaskLogger.Level,
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     @Column(nullable = false)

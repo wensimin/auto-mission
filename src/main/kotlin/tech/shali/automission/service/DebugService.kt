@@ -62,7 +62,7 @@ class DebugService(
             // 超时时间
             val endTime = it.value.startTime + TIMEOUT * 60 * 1000
             // 超时或结束了的任务
-            endTime > System.currentTimeMillis() || it.value.schedule.isDone
+            endTime < System.currentTimeMillis() || it.value.schedule.isDone
         }.forEach {
             taskLogger.info("销毁debug的任务 启动于: ${it.value.startTime}")
             this.stopTask(it.key)

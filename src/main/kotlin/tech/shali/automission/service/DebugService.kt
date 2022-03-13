@@ -64,7 +64,7 @@ class DebugService(
             // 超时或结束了的任务
             endTime > System.currentTimeMillis() || it.value.schedule.isDone
         }.forEach {
-            taskLogger.debug("销毁debug的任务 启动于: ${it.value.startTime}")
+            taskLogger.info("销毁debug的任务 启动于: ${it.value.startTime}")
             this.stopTask(it.key)
         }
     }

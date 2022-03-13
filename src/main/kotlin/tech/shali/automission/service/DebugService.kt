@@ -31,7 +31,7 @@ class DebugService(
             val schedule = taskScheduler.schedule(task, Date())
             debuggingTask[id] = DebugSchedule(schedule, logger)
             logger.debug("已经启动debug")
-            // 启动一个进程去进行超时关闭
+            // 启动一个线程去进行超时关闭
             Thread {
                 Thread.sleep(TIMEOUT * 60 * 1000L)
                 stopTask(id)

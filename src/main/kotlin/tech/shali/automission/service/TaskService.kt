@@ -167,7 +167,10 @@ class TaskService(
     /**
      * 构建task Runnable
      */
-    fun getTaskRunnable(code: String, logger: TaskLogger): Runnable {
+    fun getTaskRunnable(
+        code: String,
+        logger: TaskLogger
+    ): Runnable {
         val engine = ScriptEngineManager().getEngineByExtension("kts")
         engine as Compilable
         // 编译异常进行抛出

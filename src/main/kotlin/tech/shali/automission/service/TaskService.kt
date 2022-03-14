@@ -42,6 +42,7 @@ class TaskService(
      */
     private val runningTaskMap = ConcurrentHashMap<UUID, ScheduledFuture<*>>()
     private val logger = taskLogService.getLogger()
+
     fun find(taskQuery: TaskQuery): Page<Task> {
         return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
     }
@@ -112,6 +113,7 @@ class TaskService(
             try {
                 startTask(it)
             } catch (e: Exception) {
+                logger.error("${it.id} 启动失败 ${e.stackTraceToString()}")
                 logger.warn("${it.id} 启动失败,已经设为停止状态")
                 it.enabled = false
                 taskDao.save(it)
@@ -175,15 +177,14 @@ class TaskService(
         engine as Compilable
         // 编译异常进行抛出
         val compiled = engine.compile(code)
-        // api对象持续整个任务周期
-        val webClient = WebClient.create()
-        val restTemplate = RestTemplate()
+        // binging对象持续整个任务周期
+        val bindings = engine.createBindings().apply {
+            put("logger", logger)
+            putBindings()
+        }
         return Runnable {
             try {
-                compiled.eval(engine.createBindings().apply {
-                    put("logger", logger)
-                    putBindings(webClient, restTemplate)
-                })
+                compiled.eval(bindings)
                 //运行时的错误进行catch&log
             } catch (e: Exception) {
                 logger.error(e.stackTraceToString())
@@ -196,9 +197,9 @@ class TaskService(
      * 基本的依赖项注入
      */
     private fun Bindings.putBindings(
-        webClient: WebClient = WebClient.create(),
-        restTemplate: RestTemplate = RestTemplate()
     ) {
+        val webClient = WebClient.create()
+        val restTemplate = RestTemplate()
         put("messageService", messageService)
         put("objectMapper", objectMapper)
         put("webClient", webClient)

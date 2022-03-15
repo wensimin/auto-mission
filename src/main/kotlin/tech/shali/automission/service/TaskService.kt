@@ -187,7 +187,11 @@ class TaskService(
                 compiled.eval(bindings)
                 //运行时的错误进行catch&log
             } catch (e: Exception) {
-                logger.error(e.stackTraceToString())
+                if (e.cause is InterruptedException) {
+                    logger.warn("运行中被中断")
+                } else {
+                    logger.error(e.stackTraceToString())
+                }
             }
         }
     }

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.InjectionPoint
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Scope
+import org.springframework.scheduling.TaskScheduler
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 
 @Configuration
 class BeanConfig {
@@ -21,4 +23,16 @@ class BeanConfig {
                 ?: injectionPoint.field?.declaringClass // or field injection
         )
     }
+
+    /**
+     * 任务池配置
+     */
+    @Bean
+    fun threadPoolTaskScheduler(): TaskScheduler {
+        return ThreadPoolTaskScheduler().apply {
+            isRemoveOnCancelPolicy = true
+            poolSize=10
+        }
+    }
+
 }

@@ -1,5 +1,6 @@
 package tech.shali.automission.controller
 
+import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -17,6 +18,7 @@ class GlobalErrorHandler(
     taskLogService: TaskLogService
 ) {
     private val taskLogger = taskLogService.getLogger()
+
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse {
@@ -26,6 +28,16 @@ class GlobalErrorHandler(
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
 
+    /**
+     * 客户端中止请求
+     */
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ExceptionHandler(value = [ClientAbortException::class])
+    fun exception(e: ClientAbortException): Nothing? = null
+
+    /**
+     * 参数错误
+     */
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [MethodArgumentNotValidException::class])
     fun exception(e: MethodArgumentNotValidException): ErrorResponse {
@@ -48,7 +60,7 @@ class GlobalErrorHandler(
 
 }
 
-class ErrorResponse(val error: ErrorType, val message: String?)
+data class ErrorResponse(val error: ErrorType, val message: String?)
 
 enum class ErrorType {
     ERROR, PARAM, NOT_FOUND, DEBUG_LIMIT

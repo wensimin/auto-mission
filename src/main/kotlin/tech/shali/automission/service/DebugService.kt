@@ -21,6 +21,7 @@ class DebugService(
     taskLogService: TaskLogService
 ) {
     private val debuggingTask = ConcurrentHashMap<String, DebugSchedule>()
+    private val debuggingLogMap = ConcurrentHashMap<String, DebugLogger>()
     private val taskLogger = taskLogService.getLogger()
 
     companion object {
@@ -42,6 +43,7 @@ class DebugService(
             val task = taskService.getTaskRunnable(code.code!!, logger)
             val schedule = taskScheduler.schedule(task, Date())
             debuggingTask[id] = DebugSchedule(schedule, logger, System.currentTimeMillis())
+            debuggingLogMap[id] = DebugLogger(logger, System.currentTimeMillis())
             logger.debug("已经启动debug")
         } catch (e: Exception) {
             logger.error("启动测试失败")
@@ -67,11 +69,15 @@ class DebugService(
             taskLogger.info("销毁debug的任务 启动于: ${it.value.startTime}")
             this.stopTask(it.key)
         }
+        // 销毁logger
+        debuggingLogMap.filter {
+            it.value.startTime + TIMEOUT * 60 * 1000 < System.currentTimeMillis()
+        }.forEach { this.debuggingLogMap.remove(it.key) }
     }
 
     fun viewResult(id: String): DebugResult? {
-        return debuggingTask[id]?.let {
-            DebugResult(id, it.schedule.isDone, it.logger.view())
+        return debuggingLogMap[id]?.let {
+            DebugResult(id, debuggingTask[id]?.schedule?.isDone ?: true, it.logger.view())
         }
     }
 
@@ -86,9 +92,10 @@ class DebugService(
         this.debuggingTask[id]?.let {
             it.schedule.cancel(true)
             this.debuggingTask.remove(id)
-            it.logger.warn("任务被停止")
         }
     }
 
     class DebugSchedule(val schedule: ScheduledFuture<*>, val logger: DebugTaskLogger, val startTime: Long)
+
+    class DebugLogger(val logger: DebugTaskLogger, val startTime: Long)
 }

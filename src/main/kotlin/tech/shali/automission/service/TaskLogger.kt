@@ -9,8 +9,8 @@ interface TaskLogger {
     fun error(message: String, taskId: String? = null) = log(Level.ERROR, message, taskId)
     fun warn(message: String, taskId: String? = null) = log(Level.WARN, message, taskId)
 
-    enum class Level(val value: Int) {
-        ERROR(1), WARN(10), INFO(100), DEBUG(1000)
+    enum class Level {
+        ERROR, WARN, INFO, DEBUG
     }
 }
 

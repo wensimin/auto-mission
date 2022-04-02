@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.controller.NotFoundException
+import tech.shali.automission.controller.ServiceException
 import tech.shali.automission.dao.TaskDao
 import tech.shali.automission.entity.Task
 import tech.shali.automission.pojo.TaskQuery
@@ -158,7 +159,7 @@ class TaskService(
                     taskScheduler.scheduleWithFixedDelay(taskRunnable, task.interval!!)
             }
             else -> {
-                throw RuntimeException("没有任何调度方式")
+                throw ServiceException(message = "没有任何调度方式")
             }
         }
         // 存储正在运行的任务map

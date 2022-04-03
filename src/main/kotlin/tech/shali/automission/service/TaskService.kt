@@ -18,7 +18,7 @@ import tech.shali.automission.dao.TaskDao
 import tech.shali.automission.entity.Task
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
-import tech.shali.automission.pojo.utils.toClass
+import tech.shali.automission.pojo.utils.copyTO
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
@@ -52,7 +52,7 @@ class TaskService(
      * 保存任务后会自动暂停
      */
     fun save(save: TaskSave) {
-        val task = save.toClass(Task::class)
+        val task = save.copyTO(Task::class)
         validTask(task)
         taskDao.save(task)
         stopTask(task)

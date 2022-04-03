@@ -7,7 +7,7 @@ import java.util.*
 data class TaskLogQuery(
     @Less("level")
     val level: TaskLogger.Level? = null,
-    @Like(Like.Type.ALL)
+    @Like(Like.Type.ALL, separator = " ")
     val text: String? = null,
     val taskId: String? = null,
     @Greater("createDate")

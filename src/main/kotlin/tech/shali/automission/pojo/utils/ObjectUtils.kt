@@ -11,7 +11,7 @@ import kotlin.reflect.full.memberProperties
  *
  * @param fromType 简易的使用了first constructor ,使用时应保证只有单个constructor
  */
-fun <T : Any, R : Any> T.toClass(fromType: KClass<R>): R {
+fun <T : Any, R : Any> T.copyTO(fromType: KClass<R>): R {
     val props = this::class.memberProperties
     val constructor = fromType.constructors.first()
     val params = mutableMapOf<KParameter, Any?>()

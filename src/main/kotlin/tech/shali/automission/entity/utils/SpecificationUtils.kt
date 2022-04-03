@@ -3,7 +3,6 @@ package tech.shali.automission.entity.utils
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.util.ObjectUtils
 import java.lang.reflect.Field
-import java.util.*
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
@@ -98,7 +97,7 @@ interface QueryParam {
         value: Any,
         eq: Eq? = null
     ): Predicate {
-        val filedName = if (ObjectUtils.isEmpty(eq?.fieldName)) field.name else eq?.fieldName
+        val filedName = eq?.fieldName?.ifEmpty { field.name }
         return if (eq?.igCase == true && value is String) {
             criteriaBuilder.equal(criteriaBuilder.upper(root.get(filedName)), value.uppercase())
         } else {
@@ -117,22 +116,36 @@ interface QueryParam {
         field: Field,
         value: Any
     ): Predicate {
-        val filedName = if (like.fieldName.isEmpty()) field.name else like.fieldName
-        value as String
-        val queryValue = when (like.type) {
+        val filedName = like.fieldName.ifEmpty { field.name }
+        // like must string
+        if (value !is String) throw TypeCastException("like must string")
+        val predicateSet = mutableSetOf<Predicate>()
+        // 若是分隔符存在则分割关键字查询
+        if (like.separator.isNotEmpty()) {
+            value.split(like.separator).forEach {
+                criteriaBuilder.like(root.get(filedName), getLikeValue(like.type, it))
+                predicateSet.add(criteriaBuilder.like(root.get(filedName), getLikeValue(like.type, it)))
+            }
+        } else {
+            predicateSet.add(criteriaBuilder.like(root.get(filedName), getLikeValue(like.type, value)))
+        }
+        return criteriaBuilder.and(*predicateSet.toTypedArray())
+    }
+
+    private fun getLikeValue(type: Like.Type, value: String): String {
+        return when (type) {
             Like.Type.START -> "$value%"
             Like.Type.END -> "%$value"
             Like.Type.ALL -> "%$value%"
         }
-        return criteriaBuilder.like(root.get(filedName), queryValue)
     }
 
 }
 
 /**
- * 字段标记，该字段不会用于查询
+ * 忽略标记，该字段不会用于查询
  */
-@kotlin.annotation.Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
 annotation class Ignore
@@ -140,7 +153,7 @@ annotation class Ignore
 /**
  * 相等
  */
-@kotlin.annotation.Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
 annotation class Eq(val fieldName: String = "", val igCase: Boolean = false)
@@ -148,11 +161,22 @@ annotation class Eq(val fieldName: String = "", val igCase: Boolean = false)
 
 /**
  * like查询
+ * 本注解仅支持String
  */
-@kotlin.annotation.Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
-annotation class Like(val type: Type = Type.START, val fieldName: String = "") {
+annotation class Like(
+    /**
+     * like模式
+     */
+    val type: Type = Type.START,
+    val fieldName: String = "",
+    /**
+     * 分割符,如果该属性不为空则会对查询参数进行分割 and 匹配
+     */
+    val separator: String = ""
+) {
 
     enum class Type {
         START, END, ALL
@@ -165,7 +189,7 @@ annotation class Like(val type: Type = Type.START, val fieldName: String = "") {
  * @param fieldName 必须,对应的查询目标field
  * 本注解只应该使用在实现了 [java.lang.Comparable] 接口的对象上
  */
-@kotlin.annotation.Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
 annotation class Less(val fieldName: String, val eq: Boolean = true)
@@ -175,7 +199,7 @@ annotation class Less(val fieldName: String, val eq: Boolean = true)
  *  @param fieldName 必须,对应的查询目标field
  * 本注解只应该使用在实现了 [java.lang.Comparable] 接口的对象上
  */
-@kotlin.annotation.Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
 annotation class Greater(val fieldName: String, val eq: Boolean = true)

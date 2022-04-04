@@ -97,7 +97,7 @@ interface QueryParam {
         value: Any,
         eq: Eq? = null
     ): Predicate {
-        val filedName = eq?.fieldName?.ifEmpty { field.name }
+        val filedName = eq?.fieldName.orEmpty().ifEmpty { field.name }
         return if (eq?.igCase == true && value is String) {
             criteriaBuilder.equal(criteriaBuilder.upper(root.get(filedName)), value.uppercase())
         } else {

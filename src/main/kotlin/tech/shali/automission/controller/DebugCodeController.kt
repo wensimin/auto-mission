@@ -11,15 +11,15 @@ import javax.validation.Valid
 class DebugCodeController (private val debugService: DebugService){
 
     @PostMapping
-    fun create(@RequestBody @Valid code: DebugCodeVo): DebugResult {
+    suspend fun create(@RequestBody @Valid code: DebugCodeVo): DebugResult {
         return debugService.debugCode(code)
     }
     @GetMapping("{id}")
-    fun view(@PathVariable id: String): DebugResult?{
+    suspend fun view(@PathVariable id: String): DebugResult?{
         return debugService.viewResult(id)
     }
     @DeleteMapping("{id}")
-    fun stop(@PathVariable id: String): DebugResult?{
+    suspend fun stop(@PathVariable id: String): DebugResult?{
         return debugService.stopDebug(id)
     }
 

@@ -22,14 +22,10 @@ spring:
           auth: true
           starttls:
             enable: true
-  mvc:
+  webflux:
     format:
       date: yyyy-MM-dd HH:mm:ss
-
-
-server:
-  servlet:
-    context-path: /auto-mission
+    base-path: /auto-mission
 
 logging:
   level:

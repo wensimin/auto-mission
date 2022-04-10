@@ -1,6 +1,5 @@
 package tech.shali.automission.controller
 
-import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -27,13 +26,6 @@ class GlobalErrorHandler(
         taskLogger.error(e.stackTraceToString())
         return ErrorResponse(ErrorType.ERROR, e.localizedMessage ?: "未知错误")
     }
-
-    /**
-     * 客户端中止请求
-     */
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ExceptionHandler(value = [ClientAbortException::class])
-    fun exception(e: ClientAbortException): Nothing? = null
 
     /**
      * 参数错误

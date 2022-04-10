@@ -14,7 +14,7 @@ import javax.validation.Valid
 class TaskLogController(private val taskLogService: TaskLogService) {
 
     @GetMapping
-    fun get(@Valid taskLogQuery: TaskLogQuery): Page<TaskLog> {
+    suspend fun get(@Valid taskLogQuery: TaskLogQuery): Page<TaskLog> {
         return taskLogService.find(taskLogQuery)
     }
 

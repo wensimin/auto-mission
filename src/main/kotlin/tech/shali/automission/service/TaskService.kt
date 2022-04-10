@@ -1,6 +1,7 @@
 package tech.shali.automission.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.*
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Page
@@ -19,6 +20,7 @@ import tech.shali.automission.entity.Task
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.pojo.utils.copyTO
+import java.lang.Runnable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
@@ -103,26 +105,47 @@ class TaskService(
      * 启动时会reload task
      */
     @EventListener(ContextRefreshedEvent::class)
-    fun reloadTask() {
+    fun init() {
+        runBlocking {
+            launch {
+                reloadTask()
+            }
+        }
+    }
+
+    suspend fun reloadTask() {
         // 先停止所有任务
         runningTaskMap.entries.forEach {
             it.value.cancel(true)
         }
         runningTaskMap.clear()
         logger.info("开始初始化所有task")
-        this.taskDao.findByEnabled(true).forEach {
-            try {
-                startTask(it)
-            } catch (e: Exception) {
-                logger.error("${it.id} 启动失败 ${e.stackTraceToString()}")
-                logger.warn("${it.id} 启动失败,已经设为停止状态")
-                it.enabled = false
-                taskDao.save(it)
-            }
+        val tasks = withContext(Dispatchers.IO) {
+            taskDao.findByEnabled(true)
         }
-        logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
+        runBlocking {
+            tasks.map {
+                async {
+                    try {
+                        logger.info("${it.name}@${it.id} 正在启动")
+                        delay(30000)
+                        startTask(it)
+                        logger.info("${it.name}@${it.id} 完成")
+                    } catch (e: Exception) {
+                        logger.error("${it.name}@${it.id} 启动失败 ${e.stackTraceToString()}")
+                        logger.warn("${it.name}@${it.id} 启动失败,已经设为停止状态")
+                        it.enabled = false
+                        withContext(Dispatchers.IO) {
+                            taskDao.save(it)
+                        }
+                    }
+                }
+            }.forEach { it.await() }
+        }
 
+        logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
     }
+
 
     /**
      * 停止运行任务并且从map种删除

@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Scope
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 
 @Configuration
 class BeanConfig {
@@ -33,6 +35,21 @@ class BeanConfig {
             isRemoveOnCancelPolicy = true
             poolSize=10
         }
+    }
+
+    /**
+     * 自定义转换jwt的权限
+     */
+    @Bean
+    fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+        val jwtAuthenticationConverter = JwtAuthenticationConverter()
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter {
+            // scope & auth 本项目 混用
+            val scope = it.getClaim<Collection<String>?>("scope")
+            val auth = it.getClaim<Collection<String>?>("auth")
+            ((scope ?: emptyList()) + (auth ?: emptyList())).map { s -> SimpleGrantedAuthority(s) }
+        }
+        return jwtAuthenticationConverter
     }
 
 }

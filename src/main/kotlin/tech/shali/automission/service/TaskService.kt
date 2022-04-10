@@ -1,7 +1,10 @@
 package tech.shali.automission.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Page
@@ -20,15 +23,19 @@ import tech.shali.automission.entity.Task
 import tech.shali.automission.pojo.TaskQuery
 import tech.shali.automission.pojo.TaskSave
 import tech.shali.automission.pojo.utils.copyTO
-import java.lang.Runnable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
 import javax.script.Bindings
 import javax.script.Compilable
 import javax.script.ScriptEngineManager
+import kotlin.concurrent.thread
 
-
+/**
+ * task service
+ * 有状态的service
+ * 目前保存了runningTaskMap以及ready状态
+ */
 @Service
 class TaskService(
     private val taskDao: TaskDao,
@@ -45,6 +52,9 @@ class TaskService(
      */
     private val runningTaskMap = ConcurrentHashMap<UUID, ScheduledFuture<*>>()
     private val logger = taskLogService.getLogger()
+
+    @Volatile
+    private var ready = false
 
     fun find(taskQuery: TaskQuery): Page<Task> {
         return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
@@ -106,29 +116,30 @@ class TaskService(
      */
     @EventListener(ContextRefreshedEvent::class)
     fun init() {
-        runBlocking {
-            launch {
+        thread(true, name = "init task thread") {
+            runBlocking {
                 reloadTask()
             }
         }
     }
 
-    suspend fun reloadTask() {
-        // 先停止所有任务
-        runningTaskMap.entries.forEach {
-            it.value.cancel(true)
-        }
-        runningTaskMap.clear()
-        logger.info("开始初始化所有task")
-        val tasks = withContext(Dispatchers.IO) {
-            taskDao.findByEnabled(true)
-        }
-        runBlocking {
+    /**
+     * 协程异步启动所有任务
+     */
+    private suspend fun reloadTask() {
+        ready = false
+        withContext(Dispatchers.IO) {
+            // 先停止所有任务
+            runningTaskMap.entries.forEach {
+                it.value.cancel(true)
+            }
+            runningTaskMap.clear()
+            logger.info("开始初始化所有task")
+            val tasks = taskDao.findByEnabled(true)
             tasks.map {
                 async {
                     try {
                         logger.info("${it.name}@${it.id} 正在启动")
-                        delay(30000)
                         startTask(it)
                         logger.info("${it.name}@${it.id} 完成")
                     } catch (e: Exception) {
@@ -141,14 +152,15 @@ class TaskService(
                     }
                 }
             }.forEach { it.await() }
+            logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
         }
-
-        logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
+        ready = true
     }
 
 
     /**
      * 停止运行任务并且从map种删除
+     * @see checkReady
      */
     private fun stopTask(task: Task) {
         this.runningTaskMap[task.id]?.let {
@@ -160,6 +172,7 @@ class TaskService(
 
     /**
      * 运行任务
+     * @see checkReady
      */
     private fun startTask(task: Task) {
         //不重复创建task
@@ -187,7 +200,15 @@ class TaskService(
         }
         // 存储正在运行的任务map
         runningTaskMap[task.id!!] = runningTask!!
-        logger.info("${task.id} 任务启动成功,当前运行任务数量${runningTaskMap.size}")
+        logger.info("${task.name}@${task.id} 任务启动成功,当前运行任务数量${runningTaskMap.size}")
+    }
+
+    /**
+     * 外部进行调用前需要check ready
+     * 理论上modify都需要check ready状态
+     */
+    fun checkReady() {
+        if (!ready) throw ServiceException(message = "taskService未就绪,稍后再试")
     }
 
     /**
@@ -237,6 +258,7 @@ class TaskService(
 
     /**
      * 删除任务
+     * @see checkReady
      */
     fun deleteTask(id: UUID) {
         val task = taskDao.findByIdOrNull(id) ?: return

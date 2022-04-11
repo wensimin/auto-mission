@@ -9,7 +9,12 @@ spring:
     properties:
       hibernate:
         "globally_quoted_identifiers": "true"
-
+  webflux:
+    base-path: /
 logging:
   level:
-    org.springframework.security: DEBUG
+    root: warn
+    org.springframework.security: warn
+    tech.shali.automission: debug
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace

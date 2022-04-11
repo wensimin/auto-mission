@@ -22,7 +22,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-//    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -30,10 +29,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-devtools")
-    runtimeOnly("org.postgresql:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
     // jsr223
     runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223")
+    runtimeOnly("org.postgresql:postgresql")
+    //test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.h2database:h2")
+
 }
 
 

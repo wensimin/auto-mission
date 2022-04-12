@@ -57,7 +57,7 @@ class AutoMissionApplicationTests(
     }
 
     @Test
-    fun `should be unauthorized without bearer token`() {
+    fun `no auth`() {
         restTemplate.getForEntity<JsonNode>("/task")
             .also {
                 logger.debug(it.body.toString())

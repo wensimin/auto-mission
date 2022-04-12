@@ -2,6 +2,7 @@ package tech.shali.automission
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +21,7 @@ import tech.shali.automission.entity.TaskLog
 import tech.shali.automission.pojo.*
 import tech.shali.automission.service.TaskLogService
 import tech.shali.automission.service.TaskLogger
+import tech.shali.automission.service.TaskService
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
@@ -36,7 +38,9 @@ class AutoMissionApplicationTests(
     @Autowired
     private val restTemplate: TestRestTemplate,
     @Autowired
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    @Autowired
+    private val taskService: TaskService
 ) {
     // 由于testRestTemplate 的mapper 有问题,手动替换到 注入的mapper
     init {
@@ -87,13 +91,15 @@ class AutoMissionApplicationTests(
 
     @Test
     fun `task curd work flow`() {
-        `step 1 create task`()
-        val id = `step 2 view list task`()
-        `step 3 find one task`(id)
-        `step 4 start task`(id)
-        `step 5 stop task`(id)
-        `step 6 delete task`(id)
+        `create task`()
+        val id = `view list task`()
+        `find one task`(id)
+        `start task`(id)
+        `reload task`(id)
+        `stop task`(id)
+        `delete task`(id)
     }
+
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
@@ -268,7 +274,7 @@ class AutoMissionApplicationTests(
     }
 
 
-    private fun `step 1 create task`() {
+    private fun `create task`() {
         restTemplate.postForEntity<JsonNode>("/task", HttpEntity<Task>(mockTask, HttpHeaders().apply {
             set("Authorization", "Bearer admin")
             contentType = MediaType.APPLICATION_JSON
@@ -278,7 +284,7 @@ class AutoMissionApplicationTests(
         }
     }
 
-    private fun `step 2 view list task`(): String {
+    private fun `view list task`(): String {
         restTemplate.exchange<RestPageImpl<Task>>(
             "/task", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
                 set("Authorization", "Bearer admin")
@@ -293,7 +299,7 @@ class AutoMissionApplicationTests(
         }
     }
 
-    private fun `step 3 find one task`(id: String) {
+    private fun `find one task`(id: String) {
         restTemplate.exchange<Task>(
             "/task/$id", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
                 set("Authorization", "Bearer admin")
@@ -304,7 +310,7 @@ class AutoMissionApplicationTests(
         }
     }
 
-    private fun `step 4 start task`(id: String) {
+    private fun `start task`(id: String) {
         restTemplate.exchange<Task>(
             "/task/$id?enabled=true", HttpMethod.PUT, HttpEntity(
                 null,
@@ -316,7 +322,6 @@ class AutoMissionApplicationTests(
         restTemplate.exchange<Task>(
             "/task/$id", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
                 set("Authorization", "Bearer admin")
-                contentType = MediaType.APPLICATION_FORM_URLENCODED
             })
         ).also {
             assert(it.statusCode == HttpStatus.OK)
@@ -326,13 +331,29 @@ class AutoMissionApplicationTests(
         }
     }
 
-    private fun `step 5 stop task`(id: String) {
+    private fun `reload task`(id: String) {
+        runBlocking {
+            taskService.reloadTask()
+        }
+        // check
+        restTemplate.exchange<Task>(
+            "/task/$id", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+            it.body!!.also { task ->
+                assert(task.enabled)
+            }
+        }
+    }
+
+    private fun `stop task`(id: String) {
         restTemplate.exchange<Task>(
             "/task/$id?enabled=false", HttpMethod.PUT, HttpEntity(
                 null,
                 HttpHeaders().apply {
                     set("Authorization", "Bearer admin")
-                    contentType = MediaType.APPLICATION_FORM_URLENCODED
                 })
         )
         //check
@@ -348,7 +369,7 @@ class AutoMissionApplicationTests(
         }
     }
 
-    private fun `step 6 delete task`(id: String) {
+    private fun `delete task`(id: String) {
         restTemplate.exchange<Task>(
             "/task/$id", HttpMethod.DELETE, HttpEntity<Void>(HttpHeaders().apply {
                 set("Authorization", "Bearer admin")

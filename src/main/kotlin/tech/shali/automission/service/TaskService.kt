@@ -126,7 +126,7 @@ class TaskService(
     /**
      * 协程异步启动所有任务
      */
-    private suspend fun reloadTask() {
+    suspend fun reloadTask() {
         ready = false
         withContext(Dispatchers.IO) {
             // 先停止所有任务

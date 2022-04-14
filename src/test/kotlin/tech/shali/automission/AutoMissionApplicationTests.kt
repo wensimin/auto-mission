@@ -53,7 +53,7 @@ class AutoMissionApplicationTests(
     }
 
     companion object {
-        val mockTask = Task(null, "test", "test", "val a=1", null, 999999)
+        val mockTask = TaskSave(null, "test", "test", "val a=1", null, 999999)
     }
 
     @Test
@@ -111,15 +111,7 @@ class AutoMissionApplicationTests(
             TaskSave(null, "appleC", "这是个苹果c", "val a=1", interval = 999999),
             TaskSave(null, "appleD", "这是个苹果d", "val a=1", interval = 999999)
         )
-        mockTaskList.forEach { task ->
-            restTemplate.postForEntity<Void>("/task", HttpEntity(task, HttpHeaders().apply {
-                set("Authorization", "Bearer admin")
-                contentType = MediaType.APPLICATION_JSON
-            })).also {
-                logger.debug(it.body.toString())
-                assert(it.statusCode == HttpStatus.OK)
-            }
-        }
+        mockTaskList.forEach { task -> saveTask(task) }
         findTask(TaskQuery()).also {
             assert(it.totalElements.toInt() == mockTaskList.size)
         }
@@ -140,6 +132,7 @@ class AutoMissionApplicationTests(
         }
     }
 
+
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     fun `dynamic query log`(
@@ -148,8 +141,10 @@ class AutoMissionApplicationTests(
         @Value("\${spring.webflux.format.date}")
         dateFormat: String
     ) {
-        val taskLoggerA = taskLogService.getLogger("A-logger")
-        val taskLoggerB = taskLogService.getLogger("B-logger")
+        val taskA = saveTask(TaskSave(null, "taskA", "taskA", "val a=1", interval = 999999))
+        val taskB = saveTask(TaskSave(null, "taskB", "taskB", "val a=1", interval = 999999))
+        val taskLoggerA = taskLogService.getLogger(taskA)
+        val taskLoggerB = taskLogService.getLogger(taskB)
         val format = SimpleDateFormat(dateFormat)
         val startDate = Date.from(Instant.now().minusSeconds(1))
         taskLoggerA.debug("a logger debug")
@@ -204,9 +199,21 @@ class AutoMissionApplicationTests(
         debugCode(
             "import tech.shali.automission.service.*\n" +
                     "val logger = bindings[\"logger\"] as TaskLogger\n" +
-                        "logger.info(\"testInfo\")\n"
+                    "logger.info(\"testInfo\")\n"
         ).also {
             assert(it.contains("testInfo"))
+        }
+    }
+
+
+    private fun saveTask(task: TaskSave): Task {
+        return restTemplate.postForEntity<Task>("/task", HttpEntity(task, HttpHeaders().apply {
+            set("Authorization", "Bearer admin")
+            contentType = MediaType.APPLICATION_JSON
+        })).let {
+            logger.debug(it.body.toString())
+            assert(it.statusCode == HttpStatus.OK)
+            it.body!!
         }
     }
 
@@ -275,13 +282,7 @@ class AutoMissionApplicationTests(
 
 
     private fun `create task`() {
-        restTemplate.postForEntity<JsonNode>("/task", HttpEntity<Task>(mockTask, HttpHeaders().apply {
-            set("Authorization", "Bearer admin")
-            contentType = MediaType.APPLICATION_JSON
-        })).also {
-            logger.debug(it.body.toString())
-            assert(it.statusCode == HttpStatus.OK)
-        }
+        saveTask(mockTask)
     }
 
     private fun `view list task`(): String {
@@ -388,7 +389,7 @@ class AutoMissionApplicationTests(
     }
 
 
-    private fun assertTask(task: Task, mockTask: Task) {
+    private fun assertTask(task: Task, mockTask: TaskSave) {
         assert(mockTask.name == task.name)
         assert(mockTask.description == task.description)
         assert(mockTask.code == task.code)

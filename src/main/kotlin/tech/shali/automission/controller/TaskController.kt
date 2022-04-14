@@ -27,12 +27,13 @@ class TaskController(
     }
 
     @PostMapping
-    suspend fun post(@RequestBody @Valid task: TaskSave) {
-        taskService.run {
+    suspend fun post(@RequestBody @Valid task: TaskSave): Task {
+        return taskService.run {
             checkReady()
             save(task)
         }
     }
+
     @DeleteMapping("{id}")
     suspend fun delete(@PathVariable id: UUID) {
         taskService.run {

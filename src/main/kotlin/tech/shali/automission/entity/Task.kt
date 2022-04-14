@@ -25,3 +25,11 @@ class Task(
     @Column(nullable = false)
     var enabled: Boolean = false
 ) : Data()
+
+@Entity
+@Table(name = "task")
+class SimpleTask(
+    @Id
+    var id: UUID? = null,
+    var name: String
+)

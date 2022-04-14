@@ -14,7 +14,11 @@ class TaskLog(
     @Type(type = "org.hibernate.type.TextType")
     @Column(nullable = false)
     val text: String,
+    @Column(name = "task_id")
     val taskId: String? = null,
+    @ManyToOne
+    @JoinColumn(name = "task_id", insertable = false, updatable = false)
+    val task: SimpleTask? = null,
     @Id
     @GeneratedValue
     var id: UUID? = null

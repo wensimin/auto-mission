@@ -7,7 +7,7 @@ spring:
         show_sql: false
         format_sql: true
         hbm2ddl:
-          auto: update
+          auto: none
     open-in-view: false
   jackson:
     time-zone: GMT+8

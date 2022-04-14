@@ -63,11 +63,12 @@ class TaskService(
     /**
      * 保存任务后会自动暂停
      */
-    fun save(save: TaskSave) {
+    fun save(save: TaskSave): Task {
         val task = save.copyTO(Task::class)
         validTask(task)
         taskDao.save(task)
         stopTask(task)
+        return taskDao.findByIdOrNull(task.id)!!
     }
 
     /**
@@ -180,7 +181,7 @@ class TaskService(
             return
         }
         // 建立task runnable ,用task id 建立logger
-        val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task.id.toString()))
+        val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task))
         val runningTask = when {
             //首先检查cron是否有效
             CronExpression.isValidExpression(task.cronExpression) -> {

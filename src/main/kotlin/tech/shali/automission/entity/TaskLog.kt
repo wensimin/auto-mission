@@ -15,7 +15,7 @@ class TaskLog(
     @Column(nullable = false)
     val text: String,
     @Column(name = "task_id")
-    val taskId: String? = null,
+    val taskId: UUID? = null,
     @ManyToOne
     @JoinColumn(name = "task_id", insertable = false, updatable = false)
     val task: SimpleTask? = null,

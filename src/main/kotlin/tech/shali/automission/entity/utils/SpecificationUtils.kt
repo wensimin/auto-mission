@@ -4,6 +4,7 @@ import org.springframework.data.jpa.domain.Specification
 import org.springframework.util.ObjectUtils
 import java.lang.reflect.Field
 import javax.persistence.criteria.CriteriaBuilder
+import javax.persistence.criteria.JoinType
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 import kotlin.reflect.jvm.javaGetter
@@ -20,7 +21,12 @@ interface QueryParam {
      */
     fun <T> toSpecification(): Specification<T> {
         val fields = this.javaClass.declaredFields
+
         return Specification { root, query, criteriaBuilder ->
+            // add join
+            this.javaClass.getAnnotation(Join::class.java)?.also {
+                root.join<Any, Any>(it.attrName, it.joinType)
+            }
             val specs = mutableListOf<Predicate>()
             fields.forEach {
                 //忽略
@@ -203,3 +209,10 @@ annotation class Less(val fieldName: String, val eq: Boolean = true)
 @Retention
 @MustBeDocumented
 annotation class Greater(val fieldName: String, val eq: Boolean = true)
+
+/**
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention
+@MustBeDocumented
+annotation class Join(val attrName: String, val joinType: JoinType = JoinType.LEFT)

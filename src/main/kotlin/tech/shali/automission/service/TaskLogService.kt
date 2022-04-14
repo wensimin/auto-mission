@@ -28,7 +28,7 @@ class TaskLogService(private val taskLogDao: TaskLogDao) {
     class JdbcTaskLogger(private val taskLogService: TaskLogService, private val task: Task?) : TaskLogger {
 
         override fun log(level: TaskLogger.Level, message: String) {
-            taskLogService.log(TaskLog(level, message, task?.id?.toString()))
+            taskLogService.log(TaskLog(level, message, task?.id))
         }
 
     }

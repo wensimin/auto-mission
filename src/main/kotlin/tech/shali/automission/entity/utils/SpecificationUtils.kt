@@ -3,10 +3,8 @@ package tech.shali.automission.entity.utils
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.util.ObjectUtils
 import java.lang.reflect.Field
-import javax.persistence.criteria.CriteriaBuilder
-import javax.persistence.criteria.JoinType
-import javax.persistence.criteria.Predicate
-import javax.persistence.criteria.Root
+import javax.persistence.criteria.*
+import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.kotlinProperty
 
@@ -21,12 +19,9 @@ interface QueryParam {
      */
     fun <T> toSpecification(): Specification<T> {
         val fields = this.javaClass.declaredFields
-
         return Specification { root, query, criteriaBuilder ->
             // add join
-            this.javaClass.getAnnotation(Join::class.java)?.also {
-                root.join<Any, Any>(it.attrName, it.joinType)
-            }
+            val joinMap = createJoinMap(root, query)
             val specs = mutableListOf<Predicate>()
             fields.forEach {
                 //忽略
@@ -40,31 +35,65 @@ interface QueryParam {
                 }
                 // 声明为非空过编译
                 value!!
-                // 拥有eq注解||无任何注解的field 使用eq处理
-                it.getAnnotation(Eq::class.java).also { eq ->
-                    if (eq == null && it.annotations.isNotEmpty()) return@also
-                    specs.add(eqSpecification(root, criteriaBuilder, it, value, eq))
-                }
-                it.getAnnotation(Like::class.java)?.let { like ->
-                    specs.add(likeSpecification(like, root, criteriaBuilder, it, value))
-                }
-                it.getAnnotation(Less::class.java)?.let { less ->
-                    specs.add(lessSpecification(less, root, criteriaBuilder, value))
-                }
-                it.getAnnotation(Greater::class.java)?.let { greater ->
-                    specs.add(greaterSpecification(greater, root, criteriaBuilder, value))
-                }
+                // 获取该字段是否为join字段
+                val join = it.getAnnotation(JoinPath::class.java)?.let { joinPath -> joinMap[joinPath.attrName] }
+                it.annotations
+                    //过滤非 query 运算符 注解
+                    .filter { annotation -> annotation.annotationClass.hasAnnotation<Query>() }
+                    .ifEmpty {
+                        // 没有任何query注解则默认eq
+                        specs.add(eqSpecification(join ?: root, criteriaBuilder, it, value, null))
+                        emptyList()
+                    }
+                    .forEach { annotation ->
+                        specs.add(
+                            when (annotation) {
+                                is Eq ->
+                                    eqSpecification(join ?: root, criteriaBuilder, it, value, annotation)
+                                is Like ->
+                                    likeSpecification(annotation, join ?: root, criteriaBuilder, it, value)
+                                is Less ->
+                                    lessSpecification(annotation, join ?: root, criteriaBuilder, value)
+                                is Greater ->
+                                    greaterSpecification(annotation, join ?: root, criteriaBuilder, value)
+                                else -> throw RuntimeException("没有处理方式的query运算符: ${annotation.annotationClass.simpleName}")
+                            }
+                        )
+                    }
             }
             query.where(*specs.toTypedArray()).restriction
         }
     }
+
+    private fun <T> createJoinMap(root: Root<T>, query: CriteriaQuery<*>): MutableMap<String, Path<*>> {
+        val joinMap = mutableMapOf<String, Path<*>>()
+        this.javaClass.getAnnotation(Joins::class.java)?.also {
+            it.joins.forEach { fetch ->
+                joinMap[fetch.attrName] = createJoin(root, query, fetch)
+            }
+
+        }
+        this.javaClass.getAnnotation(Join::class.java)?.also {
+            joinMap[it.attrName] = createJoin(root, query, it)
+        }
+        return joinMap
+    }
+
+    private fun <T> createJoin(root: Root<T>, query: CriteriaQuery<*>, fetch: Join): Path<*> {
+        return if (query.resultType.name == "java.lang.Long") {
+            root.join<Any, Any>(fetch.attrName, fetch.joinType)
+        } else {
+            root.fetch<Any, Any>(fetch.attrName, fetch.joinType) as Path<*>
+        }
+    }
+
 
     /**
      * 生成大于目标规范
      */
     private fun <T> greaterSpecification(
         greater: Greater,
-        root: Root<T>,
+        root: Path<T>,
         criteriaBuilder: CriteriaBuilder,
         value: Any
     ): Predicate {
@@ -81,7 +110,7 @@ interface QueryParam {
      */
     private fun <T> lessSpecification(
         less: Less,
-        root: Root<T>,
+        root: Path<T>,
         criteriaBuilder: CriteriaBuilder,
         value: Any
     ): Predicate {
@@ -97,7 +126,7 @@ interface QueryParam {
      * 生成eq查询规范
      */
     private fun <T> eqSpecification(
-        root: Root<T>,
+        root: Path<T>,
         criteriaBuilder: CriteriaBuilder,
         field: Field,
         value: Any,
@@ -117,7 +146,7 @@ interface QueryParam {
      */
     private fun <T> likeSpecification(
         like: Like,
-        root: Root<T>,
+        root: Path<T>,
         criteriaBuilder: CriteriaBuilder,
         field: Field,
         value: Any
@@ -146,7 +175,9 @@ interface QueryParam {
         }
     }
 
+
 }
+
 
 /**
  * 忽略标记，该字段不会用于查询
@@ -162,6 +193,7 @@ annotation class Ignore
 @Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
+@Query
 annotation class Eq(val fieldName: String = "", val igCase: Boolean = false)
 
 
@@ -172,6 +204,7 @@ annotation class Eq(val fieldName: String = "", val igCase: Boolean = false)
 @Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
+@Query
 annotation class Like(
     /**
      * like模式
@@ -198,6 +231,7 @@ annotation class Like(
 @Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
+@Query
 annotation class Less(val fieldName: String, val eq: Boolean = true)
 
 /**
@@ -208,11 +242,40 @@ annotation class Less(val fieldName: String, val eq: Boolean = true)
 @Target(AnnotationTarget.FIELD)
 @Retention
 @MustBeDocumented
+@Query
 annotation class Greater(val fieldName: String, val eq: Boolean = true)
 
 /**
+ * 建立连接关系
+ * @param attrName 目标实体字段
+ * @param joinType join方式
  */
 @Target(AnnotationTarget.CLASS)
 @Retention
 @MustBeDocumented
 annotation class Join(val attrName: String, val joinType: JoinType = JoinType.LEFT)
+
+/**
+ * 批量连接关系
+ * @see Join
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention
+@MustBeDocumented
+annotation class Joins(val joins: Array<Join>)
+
+/**
+ * 连接查询的path
+ */
+@Target(AnnotationTarget.FIELD)
+@Retention
+@MustBeDocumented
+annotation class JoinPath(val attrName: String)
+
+/**
+ * 元注解,表示被该注解注释的注解为查询表达式
+ */
+@Target(AnnotationTarget.ANNOTATION_CLASS)
+@Retention
+@MustBeDocumented
+annotation class Query

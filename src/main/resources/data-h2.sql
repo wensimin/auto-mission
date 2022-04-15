@@ -4,6 +4,7 @@ create table "store"
     "value" varchar(255),
     primary key ("key")
 );
+
 create table "task"
 (
     "id"              binary              not null,
@@ -18,13 +19,14 @@ create table "task"
     "name"            varchar(255)        not null,
     primary key ("id")
 );
+
 create table "task_log"
 (
     "id"          binary              not null,
     "create_date" timestamp           not null,
     "update_date" timestamp           not null,
     "level"       integer             not null,
-    "task_id"     varchar(255),
+    "task_id"     binary,
     "text"        varchar(2147483647) not null,
     primary key ("id")
 );

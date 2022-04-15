@@ -161,35 +161,40 @@ class AutoMissionApplicationTests(
             //无条件查询会查询到系统非本case的log,所以使用>=
             assert(it.totalElements >= 6)
         }
-        findLog(TaskLogQuery(taskId = "A-logger"), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, page = PageVo(size = 1)), format).also {
+            assert(it.content.size == 1)
             assert(it.totalElements.toInt() == 5)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", level = TaskLogger.Level.ERROR), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, level = TaskLogger.Level.ERROR), format).also {
             assert(it.totalElements.toInt() == 1)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", level = TaskLogger.Level.INFO), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, level = TaskLogger.Level.INFO), format).also {
             assert(it.totalElements.toInt() == 4)
         }
-        findLog(TaskLogQuery(taskId = "B-logger"), format).also {
+        findLog(TaskLogQuery(taskId = taskB.id), format).also {
             assert(it.totalElements.toInt() == 2)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", startDate = startDate), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, startDate = startDate), format).also {
             assert(it.totalElements.toInt() == 5)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", startDate = startDate, endDate = endDate), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, startDate = startDate, endDate = endDate), format).also {
             assert(it.totalElements.toInt() == 5)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", startDate = startDate, endDate = dateCut), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, startDate = startDate, endDate = dateCut), format).also {
             assert(it.totalElements.toInt() == 4)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", startDate = dateCut, endDate = endDate), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, startDate = dateCut, endDate = endDate), format).also {
             assert(it.totalElements.toInt() == 1)
         }
-        findLog(TaskLogQuery(taskId = "B-logger", startDate = dateCut), format).also {
+        findLog(TaskLogQuery(taskId = taskB.id, startDate = dateCut), format).also {
             assert(it.totalElements.toInt() == 2)
         }
-        findLog(TaskLogQuery(taskId = "A-logger", text = "after"), format).also {
+        findLog(TaskLogQuery(taskId = taskA.id, text = "after"), format).also {
             assert(it.totalElements.toInt() == 1)
+        }
+        findLog(TaskLogQuery(taskName = "taskB"), format).also {
+            assert(it.totalElements.toInt() == 2)
+            it.content.forEach { log -> assert(log.task?.name == "taskB") }
         }
     }
 
@@ -251,8 +256,11 @@ class AutoMissionApplicationTests(
     private fun findLog(query: TaskLogQuery, dateFormat: SimpleDateFormat): RestPageImpl<TaskLog> {
         val startDate = if (query.startDate != null) dateFormat.format(query.startDate) else ""
         val endDate = if (query.endDate != null) dateFormat.format(query.endDate) else ""
-        val queryString = "level=${query.level ?: ""}&text=${query.text ?: ""}&taskId=${query.taskId ?: ""}" +
-                "&startDate=${startDate}&endDate=${endDate}"
+        val pageQuery =
+            "page.number=${query.page.number}&page.size=${query.page.size}"
+        val queryString = "level=${query.level ?: ""}&text=${query.text ?: ""}" +
+                "&taskId=${query.taskId ?: ""}&taskName=${query.taskName ?: ""}" +
+                "&startDate=${startDate}&endDate=${endDate}&$pageQuery"
         return restTemplate.exchange<RestPageImpl<TaskLog>>(
             "/taskLog?$queryString",
             HttpMethod.GET,

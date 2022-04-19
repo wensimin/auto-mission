@@ -6,6 +6,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import com.fasterxml.jackson.module.kotlin.*
 import org.springframework.http.*
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.reactive.function.client.*
+import kotlinx.coroutines.*
 
 // 常用注入对象
 // 用法参见 https://github.com/wensimin/auto-mission/blob/master/README.md

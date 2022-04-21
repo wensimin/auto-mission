@@ -210,6 +210,68 @@ class AutoMissionApplicationTests(
         }
     }
 
+    @Test
+    fun `valid param`() {
+        restTemplate.exchange<JsonNode>(
+            "/store", HttpMethod.PUT, HttpEntity(
+                Store("", "value"),
+                HttpHeaders().apply {
+                    set("Authorization", "Bearer admin")
+                })
+        ).also {
+            assert(it.statusCode == HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    @Test
+    fun `use store work flow`() {
+        saveStore(Store("key", "value")).also {
+            assert(it.statusCode == HttpStatus.OK)
+            assert(it.body?.key == "key")
+            assert(it.body?.value == "value")
+        }
+        restTemplate.exchange<List<Store>>(
+            "/store", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+            assert(it.body!!.isNotEmpty())
+        }
+        debugCode(
+            "import tech.shali.automission.service.*\n" +
+                    "val store  =  bindings[\"store\"] as KVStore\n" +
+                    "val logger = bindings[\"logger\"] as TaskLogger\n" +
+                    "logger.info(store.get(\"key\")!!)"
+        ).also {
+            assert(it.contains("value"))
+        }
+        saveStore(Store("key", "newValue")).also {
+            assert(it.statusCode == HttpStatus.OK)
+            assert(it.body?.key == "key")
+            assert(it.body?.value == "newValue")
+        }
+        debugCode(
+            "import tech.shali.automission.service.*\n" +
+                    "val store  =  bindings[\"store\"] as KVStore\n" +
+                    "val logger = bindings[\"logger\"] as TaskLogger\n" +
+                    "logger.info(store.get(\"key\")!!)"
+        ).also {
+            assert(it.contains("newValue"))
+        }
+    }
+
+
+    private fun saveStore(store: Store): ResponseEntity<Store> {
+        return restTemplate.exchange(
+            "/store", HttpMethod.PUT, HttpEntity(
+                store,
+                HttpHeaders().apply {
+                    set("Authorization", "Bearer admin")
+                })
+        )
+    }
+
 
     private fun saveTask(task: TaskSave): Task {
         return restTemplate.postForEntity<Task>("/task", HttpEntity(task, HttpHeaders().apply {

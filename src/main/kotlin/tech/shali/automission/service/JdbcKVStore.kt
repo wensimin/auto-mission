@@ -3,7 +3,7 @@ package tech.shali.automission.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import tech.shali.automission.dao.StoreDao
-import tech.shali.automission.pojo.Store
+import tech.shali.automission.entity.Store
 
 @Service
 class JdbcKVStore(private val storeDao: StoreDao) : KVStore {

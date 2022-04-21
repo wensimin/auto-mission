@@ -16,6 +16,7 @@ import org.springframework.http.*
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import tech.shali.automission.entity.Store
 import tech.shali.automission.entity.Task
 import tech.shali.automission.entity.TaskLog
 import tech.shali.automission.pojo.*
@@ -230,20 +231,19 @@ class AutoMissionApplicationTests(
             assert(it.body?.key == "key")
             assert(it.body?.value == "value")
         }
-        restTemplate.exchange<List<Store>>(
-            "/store", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+        restTemplate.exchange<RestPageImpl<Store>>(
+            "/store?key=ke", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
                 set("Authorization", "Bearer admin")
             })
         ).also {
             assert(it.statusCode == HttpStatus.OK)
-            assert(it.body!!.isNotEmpty())
+            assert(it.body!!.totalElements >= 1)
         }
-        debugCode(
-            "import tech.shali.automission.service.*\n" +
-                    "val store  =  bindings[\"store\"] as KVStore\n" +
-                    "val logger = bindings[\"logger\"] as TaskLogger\n" +
-                    "logger.info(store.get(\"key\")!!)"
-        ).also {
+        val logStoreCode = "import tech.shali.automission.service.*\n" +
+                "val store  =  bindings[\"store\"] as KVStore\n" +
+                "val logger = bindings[\"logger\"] as TaskLogger\n" +
+                "logger.info(store.get(\"key\")!!)"
+        debugCode(logStoreCode).also {
             assert(it.contains("value"))
         }
         saveStore(Store("key", "newValue")).also {
@@ -251,12 +251,7 @@ class AutoMissionApplicationTests(
             assert(it.body?.key == "key")
             assert(it.body?.value == "newValue")
         }
-        debugCode(
-            "import tech.shali.automission.service.*\n" +
-                    "val store  =  bindings[\"store\"] as KVStore\n" +
-                    "val logger = bindings[\"logger\"] as TaskLogger\n" +
-                    "logger.info(store.get(\"key\")!!)"
-        ).also {
+        debugCode(logStoreCode).also {
             assert(it.contains("newValue"))
         }
     }

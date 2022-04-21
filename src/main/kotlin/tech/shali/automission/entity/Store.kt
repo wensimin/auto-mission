@@ -1,4 +1,4 @@
-package tech.shali.automission.pojo
+package tech.shali.automission.entity
 
 import javax.persistence.Entity
 import javax.persistence.Id

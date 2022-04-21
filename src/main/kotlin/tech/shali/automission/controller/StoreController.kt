@@ -1,8 +1,10 @@
 package tech.shali.automission.controller
 
+import org.springframework.data.domain.Page
 import org.springframework.web.bind.annotation.*
 import tech.shali.automission.dao.StoreDao
-import tech.shali.automission.pojo.Store
+import tech.shali.automission.entity.Store
+import tech.shali.automission.pojo.StoreQuery
 import javax.validation.Valid
 
 @RestController
@@ -10,8 +12,8 @@ import javax.validation.Valid
 class StoreController(private val storeDao: StoreDao) {
 
     @GetMapping
-    fun get(): List<Store> {
-        return storeDao.findAll()
+    fun get(query: StoreQuery): Page<Store> {
+        return storeDao.findAll(query.toSpecification<Store>(), query.page.toPageRequest())
     }
 
     @PutMapping

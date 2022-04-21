@@ -5,13 +5,13 @@
 试运行环境下会返回logger结果,生产环境下会记录到tasklogger模块中  
 `val logger = bindings["logger"] as TaskLogger`  
 标准方法  
-`fun log(label: Label, message: String, taskId: String? = null)`  
+`fun log(label: Label, message: String)`  
 简易变体  
 ````
-  fun debug(message: String, taskId: String? = null) = log(Label.DEBUG, message, taskId)
-  fun info(message: String, taskId: String? = null) = log(Label.INFO, message, taskId)
-  fun error(message: String, taskId: String? = null) = log(Label.ERROR, message, taskId)
-  fun warn(message: String, taskId: String? = null) = log(Label.WARN, message, taskId)
+  fun debug(message: String) = log(Label.DEBUG, message)
+  fun info(message: String) = log(Label.INFO, message)
+  fun error(message: String) = log(Label.ERROR, message)
+  fun warn(message: String) = log(Label.WARN, message)
 ````
 # 通知服务
 `val messageService = bindings["messageService"] as MessageService`    

@@ -21,4 +21,9 @@ class StoreController(private val storeDao: StoreDao) {
         return storeDao.save(store)
     }
 
+    @DeleteMapping("{key}")
+    fun delete(@PathVariable key: String) {
+        storeDao.deleteById(key)
+    }
+
 }

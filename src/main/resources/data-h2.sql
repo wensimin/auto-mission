@@ -1,7 +1,7 @@
 create table "store"
 (
     "key"   varchar(255) not null,
-    "value" varchar(255),
+    "value" varchar(2147483647),
     primary key ("key")
 );
 

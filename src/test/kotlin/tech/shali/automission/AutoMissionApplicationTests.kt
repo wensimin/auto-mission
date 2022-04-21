@@ -254,6 +254,23 @@ class AutoMissionApplicationTests(
         debugCode(logStoreCode).also {
             assert(it.contains("newValue"))
         }
+        restTemplate.exchange<Void>(
+            "/store/key", HttpMethod.DELETE, HttpEntity(
+                null,
+                HttpHeaders().apply {
+                    set("Authorization", "Bearer admin")
+                })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+        }
+        restTemplate.exchange<RestPageImpl<Store>>(
+            "/store?key=ke", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+            assert(it.body!!.totalElements.toInt() == 0)
+        }
     }
 
 

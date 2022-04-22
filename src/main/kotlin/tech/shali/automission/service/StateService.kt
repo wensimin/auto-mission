@@ -17,7 +17,7 @@ class StateService(private val taskScheduler: TaskScheduler) {
         val threadCount = ManagementFactory.getThreadMXBean().threadCount
         taskScheduler as ThreadPoolTaskScheduler
         val activeCount = taskScheduler.activeCount
-        val taskWorker = taskScheduler.poolSize
+        val taskWorker = taskScheduler.scheduledThreadPoolExecutor.poolSize
         val taskMaxWorker = taskScheduler.scheduledThreadPoolExecutor.corePoolSize
         return SystemState(activeCount, taskWorker, taskMaxWorker, memory, totalMemory, maxMemory, threadCount)
     }

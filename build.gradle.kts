@@ -29,6 +29,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-devtools")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
     // jsr223
     runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223")
     runtimeOnly("org.postgresql:postgresql")

@@ -2,28 +2,22 @@ package tech.shali.automission.controller
 
 import org.springframework.data.domain.Page
 import org.springframework.web.bind.annotation.*
-import tech.shali.automission.dao.StoreDao
 import tech.shali.automission.entity.Store
 import tech.shali.automission.pojo.StoreQuery
+import tech.shali.automission.service.JdbcKVStore
 import javax.validation.Valid
 
 @RestController
 @RequestMapping("store")
-class StoreController(private val storeDao: StoreDao) {
+class StoreController(private val jdbcKVStore: JdbcKVStore) {
 
     @GetMapping
-    fun get(query: StoreQuery): Page<Store> {
-        return storeDao.findAll(query.toSpecification<Store>(), query.page.toPageRequest())
-    }
+    fun get(query: StoreQuery): Page<Store> = jdbcKVStore.findPage(query)
 
     @PutMapping
-    fun put(@RequestBody @Valid store: Store): Store {
-        return storeDao.save(store)
-    }
+    fun put(@RequestBody @Valid store: Store) = jdbcKVStore.save(store)
 
     @DeleteMapping("{key}")
-    fun delete(@PathVariable key: String) {
-        storeDao.deleteById(key)
-    }
+    fun delete(@PathVariable key: String) = jdbcKVStore.del(key)
 
 }

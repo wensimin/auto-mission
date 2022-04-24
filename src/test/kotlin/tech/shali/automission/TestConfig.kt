@@ -1,5 +1,7 @@
 package tech.shali.automission
 
+import org.hibernate.resource.jdbc.spi.StatementInspector
+import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.security.oauth2.jwt.Jwt
@@ -25,4 +27,13 @@ class TestConfig {
             jwt.build().toMono()
         }
     }
+
+    @Bean
+    fun interceptorRegistration(countSqlInterceptor: StatementInspector): HibernatePropertiesCustomizer {
+        return HibernatePropertiesCustomizer {
+            it["hibernate.session_factory.statement_inspector"] = countSqlInterceptor
+        }
+    }
+
+
 }

@@ -20,6 +20,7 @@ import tech.shali.automission.entity.Store
 import tech.shali.automission.entity.Task
 import tech.shali.automission.entity.TaskLog
 import tech.shali.automission.pojo.*
+import tech.shali.automission.service.KVStore
 import tech.shali.automission.service.TaskLogService
 import tech.shali.automission.service.TaskLogger
 import tech.shali.automission.service.TaskService
@@ -88,6 +89,29 @@ class AutoMissionApplicationTests(
             logger.debug(it.body.toString())
             assert(it.statusCode == HttpStatus.FORBIDDEN)
         }
+    }
+
+    @Test
+    fun `cache work flow`(@Autowired kvStore: KVStore, @Autowired countSqlInterceptor: CountSqlInterceptor) {
+        countSqlInterceptor.reset("store")
+        val key = "key"
+        // +1
+        assert(kvStore.get(key) == null)
+        // 0
+        assert(kvStore.get(key) == null)
+        assert(countSqlInterceptor.count() == 1)
+        // +2
+        kvStore.set(key, "aa")
+        // 0
+        assert(kvStore.get(key) == "aa")
+        // 0
+        assert(kvStore.get(key) == "aa")
+        assert(countSqlInterceptor.count() == 3)
+        // +2
+        kvStore.del(key)
+        // 0
+        assert(kvStore.get(key) == null)
+        assert(countSqlInterceptor.count() == 5)
     }
 
     @Test

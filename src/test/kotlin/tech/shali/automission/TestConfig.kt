@@ -9,9 +9,15 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder
 import reactor.kotlin.core.publisher.toMono
 import java.time.Instant
 
-
+/**
+ * 测试专用的一些配置
+ */
 @TestConfiguration
 class TestConfig {
+    /**
+     * 自定义jwt decode
+     * 只需要携带string admin or user 就可获得对应权限
+     */
     @Bean
     fun jwtDecoder(): ReactiveJwtDecoder {
         return ReactiveJwtDecoder {
@@ -28,6 +34,9 @@ class TestConfig {
         }
     }
 
+    /**
+     * 自定义sql count ,用于统计sql执行的条数
+     */
     @Bean
     fun interceptorRegistration(countSqlInterceptor: StatementInspector): HibernatePropertiesCustomizer {
         return HibernatePropertiesCustomizer {

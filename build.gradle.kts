@@ -10,7 +10,7 @@ plugins {
 
 group = "tech.shali"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_14
+java.sourceCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
@@ -43,12 +43,7 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "14"
-    }
-}
-tasks{
-    bootJar {
-        requiresUnpack("**/kotlin-compiler-*.jar")
+        jvmTarget = "17"
     }
 }
 

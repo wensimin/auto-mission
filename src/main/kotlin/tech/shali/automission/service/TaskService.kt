@@ -2,7 +2,6 @@ package tech.shali.automission.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.springframework.context.event.ContextRefreshedEvent
@@ -29,7 +28,6 @@ import java.util.concurrent.ScheduledFuture
 import javax.script.Bindings
 import javax.script.Compilable
 import javax.script.ScriptEngineManager
-import kotlin.concurrent.thread
 
 /**
  * task service
@@ -117,28 +115,24 @@ class TaskService(
      */
     @EventListener(ContextRefreshedEvent::class)
     fun init() {
-        thread(true, name = "init task thread") {
-            runBlocking {
-                reloadTask()
-            }
-        }
+        reloadTask()
     }
 
     /**
      * 协程异步启动所有任务
      */
-    suspend fun reloadTask() {
+    fun reloadTask() {
         ready = false
-        withContext(Dispatchers.IO) {
-            // 先停止所有任务
-            runningTaskMap.entries.forEach {
-                it.value.cancel(true)
-            }
-            runningTaskMap.clear()
-            logger.info("开始初始化所有task")
-            val tasks = taskDao.findByEnabled(true)
-            tasks.map {
-                async {
+        // 先停止所有任务
+        runningTaskMap.entries.forEach {
+            it.value.cancel(true)
+        }
+        runningTaskMap.clear()
+        logger.info("开始初始化所有task")
+        val tasks = taskDao.findByEnabled(true)
+        runBlocking {
+            tasks.forEach {
+                withContext(Dispatchers.IO) {
                     try {
                         logger.info("${it.name}@${it.id} 正在启动")
                         startTask(it)
@@ -147,14 +141,12 @@ class TaskService(
                         logger.error("${it.name}@${it.id} 启动失败 ${e.stackTraceToString()}")
                         logger.warn("${it.name}@${it.id} 启动失败,已经设为停止状态")
                         it.enabled = false
-                        withContext(Dispatchers.IO) {
-                            taskDao.save(it)
-                        }
+                        taskDao.save(it)
                     }
                 }
-            }.forEach { it.await() }
-            logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
+            }
         }
+        logger.info("初始化完毕,目前正在运行的task数量: ${runningTaskMap.size}")
         ready = true
     }
 
@@ -175,6 +167,7 @@ class TaskService(
      * 运行任务
      * @see checkReady
      */
+//    @Synchronized
     private fun startTask(task: Task) {
         //不重复创建task
         if (this.runningTaskMap.containsKey(task.id)) {

@@ -1,13 +1,14 @@
 package tech.shali.automission.controller
 
 import org.springframework.web.bind.annotation.*
+import tech.shali.automission.pojo.TaskInstance
 import tech.shali.automission.service.TaskInstanceService
 
 @RestController
 @RequestMapping("task/instance")
 class TaskInstanceController(private val taskInstanceService: TaskInstanceService) {
     @GetMapping
-    fun get(done: Boolean?): List<TaskInstanceService.TaskInstance> {
+    fun get(done: Boolean?): List<TaskInstance> {
         return taskInstanceService.findTask(done)
     }
 

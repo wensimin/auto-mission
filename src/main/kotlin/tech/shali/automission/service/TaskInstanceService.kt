@@ -1,6 +1,5 @@
 package tech.shali.automission.service
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronExpression
@@ -10,6 +9,7 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.controller.ServiceException
 import tech.shali.automission.entity.Task
+import tech.shali.automission.pojo.TaskInstance
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -167,16 +167,4 @@ class TaskInstanceService(
     }
 
 
-    data class TaskInstance(
-        val key: String,
-        val code: String,
-        val schedule: Boolean,
-        @JsonIgnore
-        val task: ScheduledFuture<*>,
-        val name: String?,
-        val createDate: Date = Date(),
-    ) {
-        val done: Boolean
-            get() = task.isDone
-    }
 }

@@ -16,6 +16,7 @@ class TaskInstanceController(private val taskInstanceService: TaskInstanceServic
     fun stop(@PathVariable key: String) {
         taskInstanceService.stopTask(key)
     }
+
     @DeleteMapping
     fun clear()=taskInstanceService.clearDoneTask()
 

@@ -24,6 +24,7 @@ import tech.shali.automission.service.KVStore
 import tech.shali.automission.service.TaskLogService
 import tech.shali.automission.service.TaskLogger
 import tech.shali.automission.service.TaskService
+import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
@@ -120,14 +121,43 @@ class AutoMissionApplicationTests(
         val id = `view list task`()
         `find one task`(id)
         `start task`(id)
+        `check instance size`(false, 1)
         `reload task`(id)
+        `check instance size`(false, 1)
         `stop task`(id)
+        `check instance size`(true, 2)
         `delete task`(id)
+        `check instance size`(false, 0)
+        `clear task instance`()
+        `check instance size`(size = 0)
+    }
+
+    @Test
+    @DirtiesContext
+    fun `task instance curd flow`() {
+        val task = saveTask(TaskSave(null, "测试instance", "这是个苹果", "val a=1", interval = 999999))
+        `check instance size`(size = 0)
+        `start task`(task.id.toString())
+        val list = `get task instance`()
+        assert(list.size == 1)
+        `start task instance`(task.id.toString())
+        `check instance size`(size = 2)
+        sleep(5000)
+        `clear task instance`()
+        `check instance size`(size = 1)
+        val longTask = saveTask(TaskSave(null, "长任务", "测试长任务", "while(true)Thread.sleep(100000)", interval = 999999))
+        `start task instance`(longTask.id.toString())
+        sleep(5000)
+        val instances = `get task instance`(false).filter { it.get("name").textValue() == "长任务" }
+        assert(instances.size == 1)
+        `stop task instance`(instances.first().get("key").textValue())
+        sleep(1000)
+        assert(`get task instance`(false).none { it.get("name").textValue() == "长任务" })
     }
 
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @DirtiesContext
     fun `dynamic query task`() {
         val mockTaskList = listOf(
             TaskSave(null, "apple", "这是个苹果", "val a=1", interval = 999999),
@@ -159,7 +189,7 @@ class AutoMissionApplicationTests(
 
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @DirtiesContext
     fun `dynamic query log`(
         @Autowired
         taskLogService: TaskLogService,
@@ -176,7 +206,7 @@ class AutoMissionApplicationTests(
         taskLoggerA.warn("a logger warn")
         taskLoggerA.error("a logger error")
         taskLoggerA.info("info")
-        Thread.sleep(5000)
+        sleep(5000)
         val dateCut = Date.from(Instant.now().minusSeconds(1))
         taskLoggerA.info("5s after")
         taskLoggerB.debug("debug")
@@ -224,6 +254,7 @@ class AutoMissionApplicationTests(
     }
 
     @Test
+    @DirtiesContext
     fun `debug code work flow`() {
         debugCode("val a=1")
         debugCode(
@@ -233,6 +264,7 @@ class AutoMissionApplicationTests(
         ).also {
             assert(it.contains("testInfo"))
         }
+        `check instance size`(size = 2)
     }
 
     @Test
@@ -334,7 +366,7 @@ class AutoMissionApplicationTests(
         }
         //each to end
         while (!debugResult.end) {
-            Thread.sleep(1000)
+            sleep(1000)
             restTemplate.exchange<DebugResult>(
                 "/debug/${debugResult.id}",
                 HttpMethod.GET,
@@ -492,6 +524,48 @@ class AutoMissionApplicationTests(
         ).also {
             assert(it.statusCode == HttpStatus.NOT_FOUND)
         }
+    }
+
+    private fun `get task instance`(done: Boolean? = null): List<JsonNode> {
+        return restTemplate.exchange<List<JsonNode>>(
+            "/task/instance?done=${done ?: ""}", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).body!!
+    }
+
+    private fun `start task instance`(id: String) {
+        restTemplate.exchange<Void>(
+            "/task/single/$id", HttpMethod.POST, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+        }
+    }
+
+    private fun `stop task instance`(key: String) {
+        restTemplate.exchange<Void>(
+            "/task/instance/$key", HttpMethod.PUT, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+        }
+    }
+
+    private fun `clear task instance`() {
+        restTemplate.exchange<Void>(
+            "/task/instance/", HttpMethod.DELETE, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).also {
+            assert(it.statusCode == HttpStatus.OK)
+        }
+    }
+
+    private fun `check instance size`(done: Boolean? = null, size: Int) {
+        assert(`get task instance`(done).size == size)
     }
 
 

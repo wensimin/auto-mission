@@ -1,6 +1,5 @@
 package tech.shali.automission.service
 
-import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import tech.shali.automission.controller.ErrorType
@@ -16,8 +15,7 @@ import java.util.concurrent.ScheduledFuture
  */
 @Service
 class DebugService(
-    private val taskService: TaskService,
-    private val taskScheduler: TaskScheduler,
+    private val taskInstanceService: TaskInstanceService,
     taskLogService: TaskLogService
 ) {
     private val debuggingTask = ConcurrentHashMap<String, DebugSchedule>()
@@ -40,8 +38,7 @@ class DebugService(
         val logger = DebugTaskLogger()
         val res = DebugResult(id)
         try {
-            val task = taskService.getTaskRunnable(code.code!!, logger)
-            val schedule = taskScheduler.schedule(task, Date())
+            val schedule = taskInstanceService.startDebugTask(code.code!!,logger)
             debuggingTask[id] = DebugSchedule(schedule, logger, System.currentTimeMillis())
             debuggingLogMap[id] = DebugLogger(logger, System.currentTimeMillis())
             logger.debug("已经启动debug")

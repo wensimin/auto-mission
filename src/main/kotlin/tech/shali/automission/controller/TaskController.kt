@@ -33,6 +33,10 @@ class TaskController(
             save(task)
         }
     }
+    @PostMapping("single/{id}")
+    suspend fun startSingle(@PathVariable id: UUID){
+        taskService.startSingle(id)
+    }
 
     @DeleteMapping("{id}")
     suspend fun delete(@PathVariable id: UUID) {

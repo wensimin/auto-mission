@@ -1,14 +1,21 @@
 package tech.shali.automission.controller
 
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import tech.shali.automission.service.TaskInstanceService
 
 @RestController
 @RequestMapping("task/instance")
 class TaskInstanceController(private val taskInstanceService: TaskInstanceService) {
-//    @GetMapping
-//    fun get() {
-//        taskInstanceService.getTask()
-//    }
+    @GetMapping
+    fun get(done: Boolean?): List<TaskInstanceService.TaskInstance> {
+        return taskInstanceService.findTask(done)
+    }
+
+    @PutMapping("{key}")
+    fun stop(@PathVariable key: String) {
+        taskInstanceService.stopTask(key)
+    }
+    @DeleteMapping
+    fun clear()=taskInstanceService.clearDoneTask()
+
 }

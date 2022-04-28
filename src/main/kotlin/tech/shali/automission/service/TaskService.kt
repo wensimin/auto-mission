@@ -1,20 +1,15 @@
 package tech.shali.automission.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronExpression
-import org.springframework.scheduling.support.CronTrigger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.reactive.function.client.WebClient
 import tech.shali.automission.controller.NotFoundException
 import tech.shali.automission.controller.ServiceException
 import tech.shali.automission.dao.TaskDao
@@ -25,9 +20,6 @@ import tech.shali.automission.pojo.utils.copyTO
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
-import javax.script.Bindings
-import javax.script.Compilable
-import javax.script.ScriptEngineManager
 
 /**
  * task service
@@ -37,13 +29,10 @@ import javax.script.ScriptEngineManager
 @Service
 class TaskService(
     private val taskDao: TaskDao,
-    private val messageService: MessageService,
-    private val objectMapper: ObjectMapper,
-    private val taskLogService: TaskLogService,
+    taskLogService: TaskLogService,
     // 任务调度器
-    private val taskScheduler: TaskScheduler,
     // 简单的kv store
-    private val jdbcKVStore: JdbcKVStore
+    private val taskInstanceService: TaskInstanceService
 ) {
     /**
      * 正在运行的任务列表
@@ -132,7 +121,7 @@ class TaskService(
         val tasks = taskDao.findByEnabled(true)
         runBlocking {
             tasks.forEach {
-                withContext(Dispatchers.IO) {
+                launch(Dispatchers.IO) {
                     try {
                         logger.info("${it.name}@${it.id} 正在启动")
                         startTask(it)
@@ -167,33 +156,14 @@ class TaskService(
      * 运行任务
      * @see checkReady
      */
-//    @Synchronized
+    @Synchronized
     private fun startTask(task: Task) {
         //不重复创建task
         if (this.runningTaskMap.containsKey(task.id)) {
             return
         }
-        // 建立task runnable ,用task id 建立logger
-        val taskRunnable = this.getTaskRunnable(task.code, taskLogService.getLogger(task))
-        val runningTask = when {
-            //首先检查cron是否有效
-            CronExpression.isValidExpression(task.cronExpression) -> {
-                taskScheduler.schedule(taskRunnable, CronTrigger(task.cronExpression!!))
-            }
-            //然后使用间隔
-            task.interval != null -> {
-                if (task.async) taskScheduler.scheduleAtFixedRate(
-                    taskRunnable,
-                    task.interval!!
-                ) else
-                    taskScheduler.scheduleWithFixedDelay(taskRunnable, task.interval!!)
-            }
-            else -> {
-                throw ServiceException(message = "没有任何调度方式")
-            }
-        }
         // 存储正在运行的任务map
-        runningTaskMap[task.id!!] = runningTask!!
+        runningTaskMap[task.id!!] = taskInstanceService.startScheduleTask(task)
         logger.info("${task.name}@${task.id} 任务启动成功,当前运行任务数量${runningTaskMap.size}")
     }
 
@@ -205,50 +175,6 @@ class TaskService(
         if (!ready) throw ServiceException(message = "taskService未就绪,稍后再试")
     }
 
-    /**
-     * 构建task Runnable
-     */
-    fun getTaskRunnable(
-        code: String,
-        logger: TaskLogger
-    ): Runnable {
-        val engine = ScriptEngineManager().getEngineByExtension("kts")
-        engine as Compilable
-        // 编译异常进行抛出
-        val compiled = engine.compile(code)
-        // binging对象持续整个任务周期
-        val bindings = engine.createBindings().apply {
-            put("logger", logger)
-            putBindings()
-        }
-        return Runnable {
-            try {
-                compiled.eval(bindings)
-                //运行时的错误进行catch&log
-            } catch (e: Exception) {
-                if (e.cause is InterruptedException) {
-                    logger.warn("运行中被中断")
-                } else {
-                    logger.error(e.stackTraceToString())
-                }
-            }
-        }
-    }
-
-
-    /**
-     * 基本的依赖项注入
-     */
-    private fun Bindings.putBindings(
-    ) {
-        val webClient = WebClient.create()
-        val restTemplate = RestTemplate()
-        put("messageService", messageService)
-        put("objectMapper", objectMapper)
-        put("webClient", webClient)
-        put("restTemplate", restTemplate)
-        put("store", jdbcKVStore)
-    }
 
     /**
      * 删除任务
@@ -258,6 +184,11 @@ class TaskService(
         val task = taskDao.findByIdOrNull(id) ?: return
         stopTask(task)
         this.taskDao.delete(task)
+    }
+
+    fun startSingle(id: UUID) {
+        val task = taskDao.findById(id).orElseThrow()
+        this.taskInstanceService.startSingleTask(task)
     }
 
 }

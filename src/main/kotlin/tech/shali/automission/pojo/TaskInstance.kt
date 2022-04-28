@@ -3,6 +3,8 @@ package tech.shali.automission.pojo
 import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.*
 import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 data class TaskInstance(
     val key: String,
@@ -15,4 +17,12 @@ data class TaskInstance(
 ) {
     val done: Boolean
         get() = task.isDone
+    val delayMessage: String
+        get() {
+            val sec = task.getDelay(TimeUnit.SECONDS)
+            val suffix = if (sec > 0) "后" else "前"
+            val secAbs = abs(sec)
+            val value = if (secAbs < 60) "$secAbs 秒" else "${secAbs / 60} 分"
+            return value + suffix
+        }
 }

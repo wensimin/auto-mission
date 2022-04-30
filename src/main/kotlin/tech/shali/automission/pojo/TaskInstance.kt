@@ -25,4 +25,7 @@ data class TaskInstance(
             val value = if (secAbs < 60) "$secAbs 秒" else "${secAbs / 60} 分"
             return value + suffix
         }
+    val running: Boolean
+        // 可从delay时间判断任务是否正在运行
+        get() = task.getDelay(TimeUnit.MILLISECONDS) <= 0
 }

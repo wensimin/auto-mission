@@ -1,5 +1,6 @@
 package tech.shali.automission.service
 
+import com.github.wensimin.jpaspecplus.findPageBySpec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -44,7 +45,7 @@ class TaskService(
     private var ready = false
 
     fun find(taskQuery: TaskQuery): Page<Task> {
-        return taskDao.findAll(taskQuery.toSpecification<Task>(), taskQuery.page.toPageRequest())
+        return taskDao.findPageBySpec(taskQuery, taskQuery.page.toPageRequest())
     }
 
     /**

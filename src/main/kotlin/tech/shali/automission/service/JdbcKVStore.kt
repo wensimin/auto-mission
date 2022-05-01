@@ -1,5 +1,6 @@
 package tech.shali.automission.service
 
+import com.github.wensimin.jpaspecplus.findPageBySpec
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.CachePut
 import org.springframework.cache.annotation.Cacheable
@@ -34,6 +35,6 @@ class JdbcKVStore(private val storeDao: StoreDao) : KVStore {
     }
 
     fun findPage(query: StoreQuery): Page<Store> {
-        return storeDao.findAll(query.toSpecification<Store>(), query.page.toPageRequest())
+        return storeDao.findPageBySpec(query, query.page.toPageRequest())
     }
 }

@@ -1,5 +1,6 @@
 package tech.shali.automission.service
 
+import com.github.wensimin.jpaspecplus.findPageBySpec
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import tech.shali.automission.dao.TaskLogDao
@@ -11,7 +12,7 @@ import tech.shali.automission.pojo.TaskLogQuery
 class TaskLogService(private val taskLogDao: TaskLogDao) {
 
     fun find(taskLogQuery: TaskLogQuery): Page<TaskLog> {
-        return taskLogDao.findAll(taskLogQuery.toSpecification<TaskLog>(), taskLogQuery.page.toPageRequest())
+        return taskLogDao.findPageBySpec(taskLogQuery, taskLogQuery.page.toPageRequest())
     }
 
     fun log(log: TaskLog) {

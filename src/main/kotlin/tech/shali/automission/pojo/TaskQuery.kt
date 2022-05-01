@@ -1,8 +1,8 @@
 package tech.shali.automission.pojo
 
-import tech.shali.automission.entity.utils.Ignore
-import tech.shali.automission.entity.utils.Like
-import tech.shali.automission.entity.utils.QueryParam
+import com.github.wensimin.jpaspecplus.Ignore
+import com.github.wensimin.jpaspecplus.specification.Like
+
 
 data class TaskQuery(
     @Like(Like.Type.ALL)
@@ -12,4 +12,4 @@ data class TaskQuery(
     var enabled: Boolean? = null,
     @Ignore
     val page: PageVo = PageVo()
-) : QueryParam
+)

@@ -80,8 +80,14 @@ class TaskInstanceService(
      * 启动debug任务,debug任务仅需要提供代码以及自定义logger
      */
     fun startDebugTask(code: String, logger: TaskLogger): ScheduledFuture<*> {
-        val taskRunnable = this.getTaskRunnable(code, logger)
-        val runningTask = taskScheduler.schedule(taskRunnable, Instant.now())
+        return startDebugTask(code, this.getTaskRunnable(code, logger))
+    }
+
+    /**
+     * debug任务重载，可以自定义runnable
+     */
+    fun startDebugTask(code: String, runnable: Runnable): ScheduledFuture<*> {
+        val runningTask = taskScheduler.schedule(runnable, Instant.now())
         addTask(null, code, false, runningTask)
         return runningTask
     }
@@ -125,7 +131,7 @@ class TaskInstanceService(
     /**
      * 构建task Runnable
      */
-    private fun getTaskRunnable(
+    fun getTaskRunnable(
         code: String,
         logger: TaskLogger
     ): Runnable {

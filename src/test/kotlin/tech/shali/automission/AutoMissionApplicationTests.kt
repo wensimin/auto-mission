@@ -12,10 +12,14 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.exchange
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.boot.test.web.client.postForEntity
+import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.web.reactive.socket.WebSocketMessage
+import org.springframework.web.reactive.socket.client.ReactorNettyWebSocketClient
+import reactor.core.publisher.Mono
 import tech.shali.automission.entity.Store
 import tech.shali.automission.entity.Task
 import tech.shali.automission.entity.TaskLog
@@ -25,7 +29,9 @@ import tech.shali.automission.service.TaskLogService
 import tech.shali.automission.service.TaskLogger
 import tech.shali.automission.service.TaskService
 import java.lang.Thread.sleep
+import java.net.URI
 import java.text.SimpleDateFormat
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 
@@ -327,6 +333,37 @@ class AutoMissionApplicationTests(
             assert(it.statusCode == HttpStatus.OK)
             assert(it.body!!.totalElements.toInt() == 0)
         }
+    }
+
+    @Test
+    fun `websocket debug`(
+        @LocalServerPort
+        port: Int,
+        @Value("\${spring.webflux.base-path}")
+        basePath: String
+    ) {
+        val code = "import tech.shali.automission.service.*\n" +
+                "val logger = bindings[\"logger\"] as TaskLogger\n" +
+                "logger.info(\"testInfo\")\n" +
+                "logger.debug(\"testdebug\")\n"
+        var count = 0
+        ReactorNettyWebSocketClient().execute(
+            URI.create("ws://localhost:${port}${basePath}debug-ws"),
+            HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            }
+        ) { session ->
+            session.send(
+                Mono.just(session.textMessage(code))
+            )
+                .thenMany(
+                    session.receive()
+                        .map(WebSocketMessage::getPayloadAsText)
+                        .map { if (it.contains("test")) count++ }
+                )
+                .then()
+        }.block(Duration.ofSeconds(20L))
+        assert(count == 2)
     }
 
 

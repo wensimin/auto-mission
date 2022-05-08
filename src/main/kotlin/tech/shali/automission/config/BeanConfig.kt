@@ -32,7 +32,7 @@ class BeanConfig {
      * 任务池配置
      */
     @Bean
-    fun threadPoolTaskScheduler(): TaskScheduler {
+    fun taskScheduler(): TaskScheduler {
         return ThreadPoolTaskScheduler().apply {
             isRemoveOnCancelPolicy = true
             poolSize = 10

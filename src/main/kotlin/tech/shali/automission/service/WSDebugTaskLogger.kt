@@ -15,4 +15,9 @@ class WSDebugTaskLogger : TaskLogger {
     fun flux() = Flux.create<String> { sink = it }
 
     fun complete() = sink.complete()
+
+    fun nextError(errorMessage: String) {
+        sink.next(errorMessage)
+        complete()
+    }
 }

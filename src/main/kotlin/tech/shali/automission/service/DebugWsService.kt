@@ -27,17 +27,22 @@ class DebugWsService(
     }
 
     fun startTask(code: String, logger: WSDebugTaskLogger, id: String) {
-        if (debugMap[id] != null) {
-            systemLogger.warn("session 已经有在执行的task 忽略后续message")
-            return
+        runCatching {
+            if (debugMap[id] != null) {
+                systemLogger.warn("session 已经有在执行的task 忽略后续message")
+                return
+            }
+            systemLogger.info("start debug task ws sessionId: $id")
+            val runnable = taskInstanceService.getTaskRunnable(code, logger)
+            val schedule = taskInstanceService.startDebugTask(code) {
+                runnable.run()
+                logger.complete()
+            }
+            debugMap[id] = schedule
+        }.onFailure {
+            logger.nextError(it.stackTraceToString())
         }
-        systemLogger.info("start debug task ws sessionId: $id")
-        val runnable = taskInstanceService.getTaskRunnable(code, logger)
-        val schedule = taskInstanceService.startDebugTask(code) {
-            runnable.run()
-            logger.complete()
-        }
-        debugMap[id] = schedule
+
     }
 
     /**

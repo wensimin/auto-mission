@@ -366,13 +366,6 @@ class AutoMissionApplicationTests(
         assert(count == 2)
     }
 
-    private fun getWsToken(): String {
-        return restTemplate.exchange<String>(
-            "/debug/ws/token", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
-                set("Authorization", "Bearer admin")
-            })
-        ).body!!
-    }
 
     @Test
     fun `no auth websocket debug`(
@@ -390,6 +383,34 @@ class AutoMissionApplicationTests(
         }.block(Duration.ofSeconds(20L))
     }
 
+    @Test
+    fun `websocket debug error`(
+        @LocalServerPort
+        port: Int,
+        @Value("\${spring.webflux.base-path}")
+        basePath: String
+    ) {
+        val token = getWsToken()
+        ReactorNettyWebSocketClient().execute(
+            URI.create("ws://localhost:${port}${basePath}debug-ws?$token")
+        ) { session ->
+            session.send(
+                Mono.just(session.textMessage("aaaa"))
+            ).and(
+                session.receive()
+                    .map { it.payloadAsText }
+                    .map { assert(it.contains("Unresolved reference: aaaa")) }
+            )
+        }.block(Duration.ofSeconds(20L))
+    }
+
+    private fun getWsToken(): String {
+        return restTemplate.exchange<String>(
+            "/debug/ws/token", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).body!!
+    }
 
     private fun saveStore(store: Store): ResponseEntity<Store> {
         return restTemplate.exchange(

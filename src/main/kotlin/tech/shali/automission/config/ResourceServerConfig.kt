@@ -17,6 +17,8 @@ class ResourceServerConfig {
         http: ServerHttpSecurity
     ): SecurityWebFilterChain? {
         http.authorizeExchange().apply {
+            // ws握手接口不使用任何验证,逻辑层代为处理
+            pathMatchers("/debug-ws/**").permitAll()
             anyExchange().hasAnyAuthority("ADMIN")
         }.and()
             .oauth2ResourceServer()

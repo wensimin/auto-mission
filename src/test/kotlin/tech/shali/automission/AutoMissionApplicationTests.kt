@@ -28,6 +28,7 @@ import tech.shali.automission.service.KVStore
 import tech.shali.automission.service.TaskLogService
 import tech.shali.automission.service.TaskLogger
 import tech.shali.automission.service.TaskService
+import tech.shali.automission.websocket.DebugHandler
 import java.lang.Thread.sleep
 import java.net.URI
 import java.text.SimpleDateFormat
@@ -336,22 +337,21 @@ class AutoMissionApplicationTests(
     }
 
     @Test
+    @DirtiesContext
     fun `websocket debug`(
         @LocalServerPort
         port: Int,
         @Value("\${spring.webflux.base-path}")
         basePath: String
     ) {
+        val token = getWsToken()
         val code = "import tech.shali.automission.service.*\n" +
                 "val logger = bindings[\"logger\"] as TaskLogger\n" +
                 "logger.info(\"testInfo\")\n" +
                 "logger.debug(\"testdebug\")\n"
         var count = 0
         ReactorNettyWebSocketClient().execute(
-            URI.create("ws://localhost:${port}${basePath}debug-ws"),
-            HttpHeaders().apply {
-                set("Authorization", "Bearer admin")
-            }
+            URI.create("ws://localhost:${port}${basePath}debug-ws?$token")
         ) { session ->
             session.send(
                 Mono.just(session.textMessage(code))
@@ -364,6 +364,30 @@ class AutoMissionApplicationTests(
                 .then()
         }.block(Duration.ofSeconds(20L))
         assert(count == 2)
+    }
+
+    private fun getWsToken(): String {
+        return restTemplate.exchange<String>(
+            "/debug/ws/token", HttpMethod.GET, HttpEntity<Void>(HttpHeaders().apply {
+                set("Authorization", "Bearer admin")
+            })
+        ).body!!
+    }
+
+    @Test
+    fun `no auth websocket debug`(
+        @LocalServerPort
+        port: Int,
+        @Value("\${spring.webflux.base-path}")
+        basePath: String
+    ) {
+        ReactorNettyWebSocketClient().execute(
+            URI.create("ws://localhost:${port}${basePath}debug-ws")
+        ) { session ->
+            session.closeStatus().map {
+                assert(it.code == DebugHandler.NO_AUTH.code)
+            }.then()
+        }.block(Duration.ofSeconds(20L))
     }
 
 

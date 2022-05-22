@@ -31,7 +31,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-devtools")
     implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("com.github.wensimin:jpa-spec-plus:0.1")
+    implementation("com.github.wensimin:jpa-spec-plus:0.1.1")
     // jsr223
     runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223")
     runtimeOnly("org.postgresql:postgresql")

@@ -24,3 +24,8 @@ fun <T : Any, R : Any> T.copyTO(fromType: KClass<R>): R {
     }
     return constructor.callBy(params)
 }
+
+/**
+ * @see copyTO(fromType: KClass<R>)
+ */
+inline fun <T : Any, reified R : Any> T.copyTo(): R = this.copyTO(R::class)

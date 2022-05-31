@@ -37,6 +37,9 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     //test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-webflux-ui
+    implementation("org.springdoc:springdoc-openapi-webflux-ui:1.6.9")
+
     testImplementation("com.h2database:h2")
 
 }

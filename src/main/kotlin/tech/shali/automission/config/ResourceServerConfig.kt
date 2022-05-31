@@ -19,6 +19,8 @@ class ResourceServerConfig {
         http.authorizeExchange().apply {
             // ws握手接口不使用任何验证,逻辑层代为处理
             pathMatchers("/debug-ws/**").permitAll()
+            // api文档公开(仅限dev)
+            pathMatchers("/swagger-ui.html/**", "/webjars/swagger-ui/**", "/v3/api-docs/**").permitAll()
             anyExchange().hasAnyAuthority("ADMIN")
         }.and()
             .oauth2ResourceServer()

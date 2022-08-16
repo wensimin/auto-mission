@@ -1,22 +1,31 @@
 package tech.shali.automission.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.netty.channel.ChannelOption
+import io.netty.handler.timeout.ReadTimeoutHandler
+import io.netty.handler.timeout.WriteTimeoutHandler
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.support.CronExpression
 import org.springframework.scheduling.support.CronTrigger
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.netty.http.client.HttpClient
 import tech.shali.automission.controller.ServiceException
 import tech.shali.automission.entity.Task
 import tech.shali.automission.pojo.TaskInstance
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 import javax.script.Bindings
 import javax.script.Compilable
 import javax.script.ScriptEngineManager
+
 
 /**
  * 任务实例管理service
@@ -40,6 +49,10 @@ class TaskInstanceService(
     private val instanceMap = ConcurrentHashMap<String, TaskInstance>()
     private val instanceList = Collections.synchronizedList(LinkedList<TaskInstance>())
 
+    companion object {
+        const val TIMEOUT = 10L
+    }
+
     /**
      * 启动一个周期性任务
      * 如果任务没有足够的调度信息则抛出业务异常
@@ -60,6 +73,7 @@ class TaskInstanceService(
                 ) else
                     taskScheduler.scheduleWithFixedDelay(taskRunnable, task.interval!!)
             }
+
             else -> {
                 throw ServiceException(message = "没有任何周期调度方式")
             }
@@ -163,8 +177,8 @@ class TaskInstanceService(
      */
     private fun Bindings.putBindings(
     ) {
-        val webClient = WebClient.create()
-        val restTemplate = RestTemplate()
+        val webClient = createWebClient()
+        val restTemplate = createRestTemplate()
         put("messageService", messageService)
         put("objectMapper", objectMapper)
         put("webClient", webClient)
@@ -172,5 +186,29 @@ class TaskInstanceService(
         put("store", jdbcKVStore)
     }
 
+    private fun createWebClient(): WebClient {
+        return WebClient.builder().clientConnector(
+            ReactorClientHttpConnector(
+                HttpClient.create().apply {
+                    responseTimeout(Duration.ofSeconds(TIMEOUT))
+                    option(ChannelOption.CONNECT_TIMEOUT_MILLIS, TIMEOUT.toInt() * 1000)
+                    doOnConnected { conn ->
+                        conn
+                            .addHandler(ReadTimeoutHandler(TIMEOUT, TimeUnit.SECONDS))
+                            .addHandler(WriteTimeoutHandler(TIMEOUT.toInt()))
+                    }
+                }
+            )
+        ).build()
+    }
+
+    private fun createRestTemplate(): RestTemplate {
+        return RestTemplateBuilder()
+            .setConnectTimeout(Duration.ofSeconds(TIMEOUT))
+            .setReadTimeout(Duration.ofSeconds(TIMEOUT))
+            .build()
+    }
 
 }
+
+

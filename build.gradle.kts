@@ -39,7 +39,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-webflux-ui
     implementation("org.springdoc:springdoc-openapi-webflux-ui:1.6.9")
-
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+    implementation("org.seleniumhq.selenium:selenium-java:4.10.0")
     testImplementation("com.h2database:h2")
 
 }

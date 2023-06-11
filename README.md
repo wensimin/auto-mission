@@ -63,12 +63,22 @@ spring boot 自带webClient
 -Dwebdriver.chrome.driver=chromedriver.exe
 ````
 // 需要额外导入
-import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.*
+import org.openqa.selenium.*
+import org.openqa.selenium.remote.*
+import java.net.URL
 
-
-// 简易用法
-ChromeDriver().run{
-    get("http://www.baidu.com")
+// 示例用法
+RemoteWebDriver(URL("http://192.168.0.200:4444"), ChromeOptions()).run{
+    // 注意添加cookie必须要打开网页一次后再添加
+    get("https://www.douyu.com/$roomId")
+    cookie.split(";").map { 
+        val (left, right) = it.split("=")
+        manage().addCookie(Cookie(left.trim(), right.trim()))
+    }
+    get("https://www.douyu.com/$roomId")
+    logger.debug("title: ${getTitle()}")
+    Thread.sleep(10*1000L)
     quit()
 }
 

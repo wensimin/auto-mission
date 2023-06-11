@@ -2,7 +2,7 @@
 自带注入对象的一些方法参数  
 
 # 日志对象  
-试运行环境下会返回logger结果,生产环境下会记录到tasklogger模块中  
+试运行环境下会返回logger结果,生产环境下会记录到taskLogger模块中  
 `val logger = bindings["logger"] as TaskLogger`  
 标准方法  
 `fun log(label: Label, message: String)`  
@@ -31,7 +31,7 @@ fun sendMessageToUser(
 ` fun sendMail(title: String, body: String)`  
 # store
 `val store  =  bindings["store"] as KVStore`  
-简易的kvstore 仅存储string  
+简易的kv store 仅存储string  
 目前为全局key&jdbc持久化实现  
 ````
     fun get(key: String): String?
@@ -55,5 +55,21 @@ spring boot 自带webClient
         .retrieve()
         .bodyToMono(JsonNode::class.java)
         .block()
+
+````
+# webDriver
+[详细文档](https://www.selenium.dev/documentation/)  
+需要预先安装driver并且设置vm变量,注意平台区分  
+-Dwebdriver.chrome.driver=chromedriver.exe
+````
+// 需要额外导入
+import org.openqa.selenium.chrome.ChromeDriver
+
+
+// 简易用法
+ChromeDriver().run{
+    get("http://www.baidu.com")
+    quit()
+}
 
 ````

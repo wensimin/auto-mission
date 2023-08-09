@@ -1,6 +1,5 @@
 package tech.shali.automission.service
 
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import tech.shali.automission.controller.ErrorType
 import tech.shali.automission.controller.ServiceException
@@ -53,8 +52,8 @@ class DebugService(
 
     /**
      * 每分钟清理一次task
+     * 已废弃,使用ws debug
      */
-    @Scheduled(cron = "0 * * * * *")
     fun clearTask() {
         taskLogger.debug("扫描正在debug的任务列表 count: ${debuggingTask.size}")
         debuggingTask.filter {

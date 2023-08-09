@@ -12,9 +12,15 @@ class Task(
     var id: UUID? = null,
     @Column(nullable = false)
     var name: String,
+    /**
+     * 描述
+     */
     @Column(nullable = false)
     @Length(max = 255)
     var description: String,
+    /**
+     * 代码
+     */
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     @Column(nullable = false)

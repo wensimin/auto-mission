@@ -7,6 +7,7 @@ import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.scheduling.TaskScheduler
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.support.CronExpression
 import org.springframework.scheduling.support.CronTrigger
 import org.springframework.stereotype.Service
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit
 import javax.script.Bindings
 import javax.script.Compilable
 import javax.script.ScriptEngineManager
+import kotlin.math.abs
 
 
 /**
@@ -49,9 +51,35 @@ class TaskInstanceService(
     private val instanceMap = ConcurrentHashMap<String, TaskInstance>()
     private val instanceList = Collections.synchronizedList(LinkedList<TaskInstance>())
 
+    /**
+     * 挂起的任务id
+     */
+    private val pendingTask = mutableSetOf<String>()
+
     companion object {
         const val TIMEOUT = 10L
+        const val PENDING_MINUTES = 3
     }
+
+    /**
+     * 每分钟检查挂起的任务,如果有挂起则邮件通知
+     */
+    @Scheduled(cron = "0 * * * * *")
+    fun checkPendingTask() {
+        instanceList.forEach {
+            val delay = it.task.getDelay(TimeUnit.MINUTES)
+            // 小于0意味着在执行
+            if (delay > 0)
+                return@forEach
+            val pendingTime = abs(delay)
+            if (pendingTime > PENDING_MINUTES) {
+                pendingTask.contains(it.key)
+                messageService.sendMail("有任务已经挂起", "任务名:${it.name} 挂起 $pendingTime 分钟")
+                pendingTask.add(it.key)
+            }
+        }
+    }
+
 
     /**
      * 启动一个周期性任务

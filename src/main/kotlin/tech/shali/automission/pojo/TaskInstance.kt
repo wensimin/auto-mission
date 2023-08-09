@@ -28,4 +28,11 @@ data class TaskInstance(
     val running: Boolean
         // 可从delay时间判断任务是否正在运行
         get() = task.getDelay(TimeUnit.MILLISECONDS) <= 0
+
+    /**
+     * 停止任务
+     */
+    fun stop() {
+        task.cancel(true)
+    }
 }
